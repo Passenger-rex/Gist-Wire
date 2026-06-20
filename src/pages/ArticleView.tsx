@@ -169,7 +169,14 @@ export default function ArticleView({ slug }: { slug: string }) {
                <ul className="space-y-3">
                  {headings.map(h => (
                    <li key={h.id} className={`${h.level === 'h3' ? 'ml-4' : ''}`}>
-                     <a href={`#${h.id}`} className="text-gray-600 hover:text-[#00a85a] transition font-medium text-sm">
+                     <a 
+                        href={`#${h.id}`} 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          document.getElementById(h.id)?.scrollIntoView({ behavior: 'smooth' });
+                        }}
+                        className="text-gray-600 hover:text-[#00a85a] transition font-medium text-sm"
+                     >
                        {h.text}
                      </a>
                    </li>
@@ -260,7 +267,14 @@ export default function ArticleView({ slug }: { slug: string }) {
                   <ul className="space-y-3">
                     {headings.map(h => (
                       <li key={h.id} className={`${h.level === 'h3' ? 'ml-4' : ''}`}>
-                        <a href={`#${h.id}`} className="text-gray-500 hover:text-[#00a85a] transition font-medium text-sm block border-l-2 border-transparent hover:border-[#00a85a] pl-2">
+                        <a 
+                          href={`#${h.id}`} 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            document.getElementById(h.id)?.scrollIntoView({ behavior: 'smooth' });
+                          }}
+                          className="text-gray-500 hover:text-[#00a85a] transition font-medium text-sm block border-l-2 border-transparent hover:border-[#00a85a] pl-2"
+                        >
                           {h.text}
                         </a>
                       </li>

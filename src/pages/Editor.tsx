@@ -7,6 +7,7 @@ export default function Editor() {
   const [isAuth, setIsAuth] = useState(false);
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: "",
     category: "News",
@@ -23,7 +24,7 @@ export default function Editor() {
     getArticles().then(setArticles);
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (email === "johntobismart@gmail.com" && password === "Toby@2022") {
       setIsAuth(true);
@@ -36,8 +37,10 @@ export default function Editor() {
     e.preventDefault();
     if (!formData.title || !formData.contentHtml) return;
 
+    const existingArticle = articles.find(a => a.id === editingId);
+
     const newArticle: Article = {
-      id: Date.now().toString(),
+      id: editingId || Date.now().toString(),
       slug: formData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
       title: formData.title,
       category: formData.category,
@@ -46,13 +49,47 @@ export default function Editor() {
       author: formData.author,
       contentHtml: formData.contentHtml,
       coverImage: formData.coverImage,
-      publishDate: new Date().toISOString()
+      publishDate: existingArticle?.publishDate || new Date().toISOString(),
+      views: existingArticle?.views || 0
     };
 
     await saveArticles([newArticle]);
     setArticles(await getArticles());
-    alert("Article Published Successfully!");
+    alert(editingId ? "Article Updated Successfully!" : "Article Published Successfully!");
+    setEditingId(null);
     setFormData({ title: "", category: "News", format: "Standard Article", excerpt: "", author: "Staff Reporter", coverImage: "", contentHtml: "<p>Start writing the next report...</p>" });
+  };
+
+  const handleFormatChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newFormat = e.target.value;
+    let newContent = formData.contentHtml;
+
+    // Change template depending on the format selected only if it hasn't been heavily edited
+    // or we are switching to a completely new template
+    if (newFormat === "Listicle") {
+      newContent = "<h2>Introduction</h2><p>Write your introduction here...</p><h2>1. First Item</h2><p>First item details...</p><h2>2. Second Item</h2><p>Second item details...</p>";
+    } else if (newFormat === "Feature Story") {
+      newContent = "<h2>The Beginning</h2><p>Write an engaging opening...</p><h2>Deep Dive</h2><p>Provide comprehensive details...</p><h2>Conclusion</h2><p>Wrap up the story...</p>";
+    } else if (newFormat === "Opinion/Editorial") {
+      newContent = "<h2>My Perspective</h2><p>State your main argument...</p><blockquote><p>A key provocative quote here...</p></blockquote><p>Further analysis...</p>";
+    } else {
+      newContent = "<h2>Executive Summary</h2><p>Provide a brief overview...</p><h2>Key Details</h2><p>Expand on the facts...</p>";
+    }
+
+    setFormData({ ...formData, format: newFormat, contentHtml: newContent });
+  };
+
+  const handleEdit = (a: Article) => {
+    setFormData({
+      title: a.title,
+      category: a.category,
+      format: a.format,
+      excerpt: a.excerpt || "",
+      author: a.author || "Staff Reporter",
+      coverImage: a.coverImage || "",
+      contentHtml: a.contentHtml
+    });
+    setEditingId(a.id);
   };
 
   if (!isAuth) {
@@ -103,7 +140,10 @@ export default function Editor() {
                  <span className="bg-[#00a85a] text-white px-2 py-1 font-bold uppercase tracking-wider text-[9px] min-w-[70px] text-center shrink-0">{a.category}</span>
                  <span className="font-bold truncate text-[#111111] text-sm" title={a.title}>{a.title}</span>
                </div>
-               <button className="text-[#00a85a] font-black uppercase hover:bg-red-50 px-3 py-2 transition ml-2 flex-shrink-0 text-[10px] tracking-widest border-2 border-transparent hover:border-red-200" onClick={async () => { await deleteArticle(a.id); setArticles(await getArticles()); }}>Delete</button>
+               <div className="flex items-center shrink-0">
+                 <button className="text-[#111111] font-black uppercase hover:bg-gray-100 px-3 py-2 transition text-[10px] tracking-widest border-2 border-transparent" onClick={() => handleEdit(a)}>Edit</button>
+                 <button className="text-[#00a85a] font-black uppercase hover:bg-red-50 px-3 py-2 transition text-[10px] tracking-widest border-2 border-transparent hover:border-red-200" onClick={async () => { await deleteArticle(a.id); setArticles(await getArticles()); }}>Delete</button>
+               </div>
             </div>
           ))}
           {articles.length === 0 && <div className="p-4 text-sm text-gray-500 font-sans font-medium text-center">No articles published. database empty.</div>}
@@ -112,26 +152,31 @@ export default function Editor() {
 
       <form onSubmit={handleSave} className="bg-white p-6 md:p-10 border border-gray-200 shadow-sm">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-10 pb-6 border-b-[4px] border-[#111111] gap-4">
-          <h1 className="text-3xl font-sans font-black uppercase tracking-tighter text-[#111111]">New News Alert</h1>
-          <button type="submit" className="bg-[#00a85a] text-white px-8 py-3.5 font-black uppercase tracking-widest text-[11px] hover:bg-[#111111] transition w-full sm:w-auto">Publish Alert</button>
+          <h1 className="text-3xl font-sans font-black uppercase tracking-tighter text-[#111111]">{editingId ? "Edit News Alert" : "New News Alert"}</h1>
+          <div className="flex items-center gap-2">
+            {editingId && (
+              <button type="button" onClick={() => { setEditingId(null); setFormData({ title: "", category: "News", format: "Standard Article", excerpt: "", author: "Staff Reporter", coverImage: "", contentHtml: "<p>Start writing the next report...</p>" }); }} className="bg-gray-200 text-[#111111] px-8 py-3.5 font-black uppercase tracking-widest text-[11px] hover:bg-gray-300 transition w-full sm:w-auto">Cancel</button>
+            )}
+            <button type="submit" className="bg-[#00a85a] text-white px-8 py-3.5 font-black uppercase tracking-widest text-[11px] hover:bg-[#111111] transition w-full sm:w-auto">{editingId ? "Update Alert" : "Publish Alert"}</button>
+          </div>
         </div>
         
         <div className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="md:col-span-2">
+            <div className="md:col-span-4">
               <label className="block font-black text-[11px] uppercase tracking-widest text-[#111111] mb-2">Headline</label>
               <input className="w-full text-2xl font-bold font-sans border-b-[3px] border-gray-200 bg-gray-50 p-4 outline-none focus:border-[#00a85a] focus:bg-white transition" placeholder="e.g., Major Policy Overhaul Announced" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} required />
             </div>
-            <div className="md:col-span-1">
+            <div className="md:col-span-2">
               <label className="block font-black text-[11px] uppercase tracking-widest text-[#111111] mb-2">Article Type / Format</label>
-              <select className="w-full border-b-[3px] border-gray-200 bg-gray-50 p-4 text-base outline-none focus:border-[#00a85a] font-bold text-[#111111] focus:bg-white transition" value={formData.format} onChange={e => setFormData({...formData, format: e.target.value})}>
+              <select className="w-full border-b-[3px] border-gray-200 bg-gray-50 p-4 text-base outline-none focus:border-[#00a85a] font-bold text-[#111111] focus:bg-white transition" value={formData.format} onChange={handleFormatChange}>
                 <option value="Standard Article">Standard Post</option>
                 <option value="Listicle">Listicle</option>
                 <option value="Feature Story">Feature Story</option>
                 <option value="Opinion/Editorial">Opinion</option>
               </select>
             </div>
-            <div className="md:col-span-1">
+            <div className="md:col-span-2">
               <label className="block font-black text-[11px] uppercase tracking-widest text-[#111111] mb-2">Section Category</label>
               <select className="w-full border-b-[3px] border-gray-200 bg-gray-50 p-4 text-base outline-none focus:border-[#00a85a] font-bold text-[#111111] focus:bg-white transition" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
                 <option value="Celebrity News">Celebrity News</option>
