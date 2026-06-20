@@ -81,7 +81,7 @@ export default function Editor() {
               className="w-full text-base font-sans font-medium text-white border-b-2 border-gray-700 bg-transparent p-4 outline-none focus:border-[#00a85a] text-center transition placeholder-gray-500"
               required
             />
-            <button type="submit" className="bg-[#00a85a] text-white py-4 font-black uppercase tracking-widest text-xs hover:bg-white hover:text-[#111111] transition w-full shadow-lg">Authenticate</button>
+            <button type="submit" className="bg-[#00a85a] text-white py-4 font-black uppercase tracking-widest text-xs hover:bg-white hover:text-[#111111] transition w-full shadow-lg">Sign In</button>
           </form>
         </div>
       </div>

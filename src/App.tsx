@@ -13,11 +13,16 @@ export default function App() {
   const [route, setRoute] = useState(window.location.hash || "#/");
   const [searchQuery, setSearchQuery] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAppLoading, setIsAppLoading] = useState(true);
 
   useEffect(() => {
+    const timer = setTimeout(() => setIsAppLoading(false), 2000);
     const onHashChange = () => setRoute(window.location.hash || "#/");
     window.addEventListener("hashchange", onHashChange);
-    return () => window.removeEventListener("hashchange", onHashChange);
+    return () => {
+      window.removeEventListener("hashchange", onHashChange);
+      clearTimeout(timer);
+    };
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -28,6 +33,23 @@ export default function App() {
       setIsMobileMenuOpen(false);
     }
   };
+
+  if (isAppLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col pt-32 px-4 max-w-7xl mx-auto space-y-12">
+        <div className="w-full flex justify-between items-center mb-12">
+          <div className="h-10 w-48 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-4 w-64 bg-gray-200 rounded animate-pulse hidden md:block"></div>
+        </div>
+        <div className="w-full h-96 bg-gray-200 rounded animate-pulse mb-8"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="h-64 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-64 bg-gray-200 rounded animate-pulse"></div>
+          <div className="h-64 bg-gray-200 rounded animate-pulse"></div>
+        </div>
+      </div>
+    );
+  }
 
   let content;
   let pageTitle = "GistWire - Always First with the News";
