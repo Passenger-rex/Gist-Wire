@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Article } from "../types";
 import { saveArticles, getArticles, deleteArticle } from "../lib/db";
 import EditorWysiwyg from 'react-simple-wysiwyg';
@@ -20,7 +20,7 @@ export default function Editor() {
   const [articles, setArticles] = useState<Article[]>([]);
 
   useEffect(() => {
-    setArticles(getArticles());
+    getArticles().then(setArticles);
   }, []);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -32,7 +32,7 @@ export default function Editor() {
     }
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title || !formData.contentHtml) return;
 
@@ -49,8 +49,8 @@ export default function Editor() {
       publishDate: new Date().toISOString()
     };
 
-    saveArticles([newArticle, ...articles]);
-    setArticles(getArticles());
+    await saveArticles([newArticle]);
+    setArticles(await getArticles());
     alert("Article Published Successfully!");
     setFormData({ title: "", category: "News", format: "Standard Article", excerpt: "", author: "Staff Reporter", coverImage: "", contentHtml: "<p>Start writing the next report...</p>" });
   };
@@ -103,7 +103,7 @@ export default function Editor() {
                  <span className="bg-[#00a85a] text-white px-2 py-1 font-bold uppercase tracking-wider text-[9px] min-w-[70px] text-center shrink-0">{a.category}</span>
                  <span className="font-bold truncate text-[#111111] text-sm" title={a.title}>{a.title}</span>
                </div>
-               <button className="text-[#00a85a] font-black uppercase hover:bg-red-50 px-3 py-2 transition ml-2 flex-shrink-0 text-[10px] tracking-widest border-2 border-transparent hover:border-red-200" onClick={() => { deleteArticle(a.id); setArticles(getArticles()); }}>Delete</button>
+               <button className="text-[#00a85a] font-black uppercase hover:bg-red-50 px-3 py-2 transition ml-2 flex-shrink-0 text-[10px] tracking-widest border-2 border-transparent hover:border-red-200" onClick={async () => { await deleteArticle(a.id); setArticles(await getArticles()); }}>Delete</button>
             </div>
           ))}
           {articles.length === 0 && <div className="p-4 text-sm text-gray-500 font-sans font-medium text-center">No articles published. database empty.</div>}

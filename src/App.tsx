@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import Home from "./pages/Home";
 import ArticleView from "./pages/ArticleView";

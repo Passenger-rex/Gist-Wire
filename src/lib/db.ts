@@ -1,7 +1,6 @@
+import { collection, doc, getDocs, getDoc, setDoc, deleteDoc, updateDoc, increment, query, where } from "firebase/firestore";
+import { db } from "./firebase";
 import { Article } from "../types";
-
-const DB_KEY = "gistwire_articles";
-const COMMENTS_KEY = "gistwire_comments";
 
 export interface CommentType {
   id: string;
@@ -12,80 +11,99 @@ export interface CommentType {
   likes: number;
 }
 
-export const getArticles = (): Article[] => {
+export const getArticles = async (): Promise<Article[]> => {
   try {
-    const data = window.localStorage.getItem(DB_KEY);
-    if (data) {
-      let articles: Article[] = JSON.parse(data);
-      // Initialize views if they don't exist
-      articles = articles.map(a => ({
-        ...a,
-        views: a.views ?? Math.floor(Math.random() * 1000) + 50
-      }));
-      return articles;
+    const querySnapshot = await getDocs(collection(db, "articles"));
+    const articles: Article[] = [];
+    querySnapshot.forEach((doc) => {
+      articles.push(doc.data() as Article);
+    });
+    return articles;
+  } catch (e) {
+    console.error("Error fetching articles", e);
+    return [];
+  }
+};
+
+export const saveArticles = async (articles: Article[]) => {
+  // This function is less common in Firebase unless batch writing.
+  // Assuming it's meant to save individual new articles or sync an array.
+  try {
+    for (const article of articles) {
+      await setDoc(doc(db, "articles", article.id), article);
     }
   } catch (e) {
-    console.error("Error reading from local storage", e);
-  }
-  return []; // Start completely empty
-};
-
-export const saveArticles = (articles: Article[]) => {
-  window.localStorage.setItem(DB_KEY, JSON.stringify(articles));
-};
-
-export const getArticleBySlug = (slug: string): Article | undefined => {
-  const articles = getArticles();
-  return articles.find(a => a.slug === slug);
-};
-
-export const incrementViews = (slug: string) => {
-  const articles = getArticles();
-  const index = articles.findIndex(a => a.slug === slug);
-  if (index > -1) {
-    articles[index].views = (articles[index].views || 0) + 1;
-    saveArticles(articles);
+    console.error("Error saving articles", e);
   }
 };
 
-export const deleteArticle = (id: string) => {
-  const articles = getArticles();
-  saveArticles(articles.filter(a => a.id !== id));
+export const getArticleBySlug = async (slug: string): Promise<Article | undefined> => {
+  try {
+    const q = query(collection(db, "articles"), where("slug", "==", slug));
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+      return querySnapshot.docs[0].data() as Article;
+    }
+  } catch (e) {
+    console.error("Error fetching article by slug", e);
+  }
+  return undefined;
 };
 
-export const getComments = (articleId: string): CommentType[] => {
+export const incrementViews = async (slug: string) => {
   try {
-    const data = window.localStorage.getItem(COMMENTS_KEY);
-    if (data) {
-      const allComments: CommentType[] = JSON.parse(data);
-      return allComments.filter(c => c.articleId === articleId);
+    const q = query(collection(db, "articles"), where("slug", "==", slug));
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+      const docRef = querySnapshot.docs[0].ref;
+      await updateDoc(docRef, {
+        views: increment(1)
+      });
     }
-  } catch (e) {}
-  return [];
+  } catch (e) {
+    console.error("Error incrementing views", e);
+  }
 };
 
-export const saveComment = (comment: CommentType) => {
+export const deleteArticle = async (id: string) => {
   try {
-    let allComments: CommentType[] = [];
-    const data = window.localStorage.getItem(COMMENTS_KEY);
-    if (data) {
-      allComments = JSON.parse(data);
-    }
-    allComments.push(comment);
-    window.localStorage.setItem(COMMENTS_KEY, JSON.stringify(allComments));
-  } catch (e) {}
+    await deleteDoc(doc(db, "articles", id));
+  } catch (e) {
+    console.error("Error deleting article", e);
+  }
 };
 
-export const likeComment = (commentId: string) => {
+export const getComments = async (articleId: string): Promise<CommentType[]> => {
   try {
-    const data = window.localStorage.getItem(COMMENTS_KEY);
-    if (data) {
-      let allComments: CommentType[] = JSON.parse(data);
-      const commentIndex = allComments.findIndex(c => c.id === commentId);
-      if (commentIndex > -1) {
-        allComments[commentIndex].likes += 1;
-        window.localStorage.setItem(COMMENTS_KEY, JSON.stringify(allComments));
-      }
-    }
-  } catch (e) {}
+    const q = query(collection(db, "comments"), where("articleId", "==", articleId));
+    const querySnapshot = await getDocs(q);
+    const comments: CommentType[] = [];
+    querySnapshot.forEach((doc) => {
+      comments.push(doc.data() as CommentType);
+    });
+    return comments;
+  } catch (e) {
+    console.error("Error fetching comments", e);
+    return [];
+  }
 };
+
+export const saveComment = async (comment: CommentType) => {
+  try {
+    await setDoc(doc(db, "comments", comment.id), comment);
+  } catch (e) {
+    console.error("Error saving comment", e);
+  }
+};
+
+export const likeComment = async (commentId: string) => {
+  try {
+    const docRef = doc(db, "comments", commentId);
+    await updateDoc(docRef, {
+      likes: increment(1)
+    });
+  } catch (e) {
+    console.error("Error liking comment", e);
+  }
+};
+

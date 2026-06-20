@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { Article } from "../types";
 import { getArticleBySlug, getComments, saveComment, likeComment, CommentType, incrementViews } from "../lib/db";
@@ -13,19 +13,20 @@ export default function ArticleView({ slug }: { slug: string }) {
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const found = getArticleBySlug(slug) || null;
-    setArticle(found);
-    if (found) {
-      setComments(getComments(found.id));
-      incrementViews(slug);
-    }
+    getArticleBySlug(slug).then(found => {
+      setArticle(found || null);
+      if (found) {
+        getComments(found.id).then(setComments);
+        incrementViews(slug);
+      }
+    });
     window.scrollTo(0, 0);
   }, [slug]);
 
   useEffect(() => {
     if (article && contentRef.current) {
-      const hTags = contentRef.current.querySelectorAll("h2, h3");
-      const extractedHeadings = Array.from(hTags).map((h, i) => {
+      const hTags = contentRef.current.querySelectorAll<HTMLElement>("h2, h3");
+      const extractedHeadings = Array.from(hTags as NodeListOf<HTMLElement>).map((h, i) => {
         if (!h.id) h.id = `section-heading-${i}`;
         return { id: h.id, text: h.textContent || "", level: h.tagName.toLowerCase() };
       });
@@ -40,7 +41,7 @@ export default function ArticleView({ slug }: { slug: string }) {
     }
   }, [article]);
 
-  const handlePostComment = (e: React.FormEvent) => {
+  const handlePostComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!article || !newCommentName.trim() || !newCommentText.trim()) return;
     
@@ -53,15 +54,15 @@ export default function ArticleView({ slug }: { slug: string }) {
       likes: 0
     };
     
-    saveComment(comment);
-    setComments(getComments(article.id));
+    await saveComment(comment);
+    setComments(await getComments(article.id));
     setNewCommentText("");
   };
 
-  const handleLikeComment = (commentId: string) => {
+  const handleLikeComment = async (commentId: string) => {
     if (!article) return;
-    likeComment(commentId);
-    setComments(getComments(article.id));
+    await likeComment(commentId);
+    setComments(await getComments(article.id));
   };
 
   const shareUrl = window.location.href;

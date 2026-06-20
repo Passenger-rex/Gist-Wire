@@ -5,23 +5,37 @@ import { getArticles } from "../lib/db";
 
 export default function Home({ searchQuery, categoryQuery }: { searchQuery?: string, categoryQuery?: string }) {
   const [articles, setArticles] = useState<Article[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    let allArticles = getArticles();
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      allArticles = allArticles.filter(a => 
-        a.title.toLowerCase().includes(q) || 
-        a.category.toLowerCase().includes(q) ||
-        a.contentHtml.toLowerCase().includes(q)
-      );
-    }
-    if (categoryQuery) {
-      const q = categoryQuery.toLowerCase();
-      allArticles = allArticles.filter(a => a.category.toLowerCase().trim() === q.trim() || a.category.toLowerCase().includes(q));
-    }
-    setArticles(allArticles);
+    let isMounted = true;
+    (async () => {
+      setIsLoading(true);
+      let allArticles = await getArticles();
+      if (!isMounted) return;
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        allArticles = allArticles.filter(a => 
+          a.title.toLowerCase().includes(q) || 
+          a.category.toLowerCase().includes(q) ||
+          a.contentHtml.toLowerCase().includes(q)
+        );
+      }
+      if (categoryQuery) {
+        const q = categoryQuery.toLowerCase();
+        allArticles = allArticles.filter(a => a.category.toLowerCase().trim() === q.trim() || a.category.toLowerCase().includes(q));
+      }
+      setArticles(allArticles);
+      setIsLoading(false);
+    })();
+    return () => { isMounted = false; };
   }, [searchQuery, categoryQuery]);
+
+  if (isLoading) return (
+    <div className="p-20 text-center">
+      <p className="text-gray-500 font-sans font-bold text-lg animate-pulse">Loading news...</p>
+    </div>
+  );
 
   if (articles.length === 0) return (
     <div className="p-20 text-center">
