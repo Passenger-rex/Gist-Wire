@@ -9,4 +9,5 @@ export interface Article {
   coverImage?: string;
   category: string;
   format?: string;
+  views?: number;
 }

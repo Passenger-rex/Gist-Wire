@@ -5,6 +5,7 @@ import ArticleView from "./pages/ArticleView";
 import Editor from "./pages/Editor";
 import Contact from "./pages/Contact";
 import About from "./pages/About";
+import DownloadLogo from "./pages/DownloadLogo";
 import Logo from "./components/Logo";
 import { Facebook, Linkedin, Instagram, Twitter, Search, Menu, X } from 'lucide-react';
 
@@ -51,6 +52,9 @@ export default function App() {
   } else if (route === "#/about") {
     pageTitle = "About Us - GistWire";
     content = <About />;
+  } else if (route === "#/download-logo") {
+    pageTitle = "Download Logo - GistWire";
+    content = <DownloadLogo />;
   } else {
     content = <Home />;
   }
@@ -78,7 +82,7 @@ export default function App() {
         <meta name="description" content="Dedicated to delivering comprehensive coverage, insightful analysis, and the latest trends shaping politics, business, and entertainment." />
       </Helmet>
 
-      <header className="bg-white sticky top-0 z-50 shadow-sm border-b border-gray-200">
+      <header className="bg-white relative z-50 shadow-sm border-b border-gray-200">
         {/* Top Header */}
         <div className="bg-[#111111] text-white py-1.5 px-4 text-[10px] font-bold uppercase tracking-widest text-center md:text-left flex justify-between items-center">
           <span>{today}</span>
@@ -93,7 +97,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between py-6">
             {/* Logo */}
-            <a href="#/">
+            <a href="#/" className="transform scale-110 md:scale-125 origin-left inline-block">
               <Logo />
             </a>
 
@@ -121,26 +125,23 @@ export default function App() {
         </div>
 
         {/* Desktop Detailed Navigation */}
-        <nav className="hidden lg:block border-t border-gray-100">
-          <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
-            <div className="flex space-x-1 py-1">
+        <nav className="hidden lg:block border-y border-gray-200 bg-white shadow-sm relative z-10 w-full overflow-x-auto">
+          <div className="max-w-7xl mx-auto px-4 flex items-center">
+            <div className="flex space-x-6 py-0 w-full whitespace-nowrap min-w-max md:min-w-0">
               {navLinks.map(link => {
                 const isActive = route === link.href || (link.href !== '#/' && route.startsWith(link.href));
                 return (
                   <a 
                     key={link.name} 
                     href={link.href} 
-                    className={`px-4 py-3 text-[11px] font-bold uppercase tracking-widest transition rounded-t-sm border-b-[3px] 
-                      ${isActive ? 'text-[#00a85a] border-[#00a85a]' : 'text-gray-600 hover:text-[#111111] border-transparent hover:border-gray-300'}`}
+                    className={`py-4 text-[13px] font-display font-bold uppercase tracking-wider transition border-b-[3px] 
+                      ${isActive ? 'text-[#00a85a] border-[#00a85a]' : 'text-gray-800 border-transparent hover:text-[#00a85a]'}`}
                   >
                     {link.name}
                   </a>
                 );
               })}
             </div>
-            
-            {/* Admin link discreetly on the right of nav */}
-            <a href="#/write" className="text-[10px] text-gray-400 hover:text-[#00a85a] uppercase font-bold tracking-widest pl-4">Staff</a>
           </div>
         </nav>
 
@@ -176,13 +177,6 @@ export default function App() {
                   </a>
                 );
               })}
-              <a 
-                href="#/write" 
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="px-4 py-5 text-xs text-gray-400 uppercase font-bold tracking-widest border-t border-gray-100 mt-2"
-              >
-                Staff Login
-              </a>
             </div>
           </div>
         )}
@@ -196,7 +190,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-12 text-sm">
           <div className="md:col-span-1">
             <a href="#/" className="inline-block mb-4">
-              <Logo className="invert brightness-0" />
+              <Logo lightText={true} />
             </a>
             <p className="text-gray-400 mb-6 leading-relaxed font-sans font-medium text-xs">
               Your premium source for up-to-the-minute updates, celebrity gists, and unfiltered news from across the nation to the global stage. Stay plugged in.
@@ -234,8 +228,10 @@ export default function App() {
           </div>
         </div>
         
-        <div className="max-w-7xl mx-auto px-4 mt-12 pt-8 border-t border-[#222222] text-center text-gray-600 text-[10px] font-bold uppercase tracking-wider flex justify-center items-center gap-4">
-          <p>© {new Date().getFullYear()} GistWire Media. All rights reserved.</p>
+        <div className="max-w-7xl mx-auto px-4 mt-12 pt-8 border-t border-[#222222] text-center text-gray-600 text-[10px] font-bold uppercase tracking-wider">
+          <p>
+            © {new Date().getFullYear()} <a href="#/write" className="text-current cursor-text" aria-label="Admin Control Panel" onClick={(e) => { e.stopPropagation(); }}>GistWire</a> Media. All rights reserved.
+          </p>
         </div>
       </footer>
     </div>

@@ -34,16 +34,6 @@ export default function About() {
           </p>
         </div>
       </div>
-
-      <div className="bg-[#111111] text-white p-12 text-center border-t-[4px] border-[#00a85a]">
-        <h2 className="text-3xl font-black uppercase tracking-widest mb-6">Join The Culture</h2>
-        <p className="text-gray-400 mb-8 max-w-2xl mx-auto">
-          We are constantly growing and looking for fresh voices, tips, and partnerships. Connect with our dedicated team today.
-        </p>
-        <a href="#/contact" className="inline-block bg-[#00a85a] text-white px-8 py-3 text-xs font-black uppercase tracking-widest hover:bg-white hover:text-[#111111] transition">
-          Contact The Newsroom
-        </a>
-      </div>
     </div>
   );
 }

@@ -16,7 +16,13 @@ export const getArticles = (): Article[] => {
   try {
     const data = window.localStorage.getItem(DB_KEY);
     if (data) {
-      return JSON.parse(data);
+      let articles: Article[] = JSON.parse(data);
+      // Initialize views if they don't exist
+      articles = articles.map(a => ({
+        ...a,
+        views: a.views ?? Math.floor(Math.random() * 1000) + 50
+      }));
+      return articles;
     }
   } catch (e) {
     console.error("Error reading from local storage", e);
@@ -31,6 +37,15 @@ export const saveArticles = (articles: Article[]) => {
 export const getArticleBySlug = (slug: string): Article | undefined => {
   const articles = getArticles();
   return articles.find(a => a.slug === slug);
+};
+
+export const incrementViews = (slug: string) => {
+  const articles = getArticles();
+  const index = articles.findIndex(a => a.slug === slug);
+  if (index > -1) {
+    articles[index].views = (articles[index].views || 0) + 1;
+    saveArticles(articles);
+  }
 };
 
 export const deleteArticle = (id: string) => {

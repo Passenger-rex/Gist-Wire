@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { Article } from "../types";
-import { getArticleBySlug, getComments, saveComment, likeComment, CommentType } from "../lib/db";
+import { getArticleBySlug, getComments, saveComment, likeComment, CommentType, incrementViews } from "../lib/db";
 import { MessageCircle, ThumbsUp, Facebook, Twitter, MessageCircle as WhatsApp, Link as LinkIcon } from "lucide-react";
 
 export default function ArticleView({ slug }: { slug: string }) {
@@ -17,6 +17,7 @@ export default function ArticleView({ slug }: { slug: string }) {
     setArticle(found);
     if (found) {
       setComments(getComments(found.id));
+      incrementViews(slug);
     }
     window.scrollTo(0, 0);
   }, [slug]);

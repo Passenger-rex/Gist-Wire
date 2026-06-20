@@ -43,10 +43,12 @@ export default function Home({ searchQuery, categoryQuery }: { searchQuery?: str
     categorizedArticles[article.category].push(article);
   });
 
+  const trendingArticles = [...articles].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5);
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       {searchQuery && (
-        <h2 className="text-2xl font-black uppercase tracking-tighter text-[#111111] mb-8">
+        <h2 className="text-2xl font-black uppercase tracking-tighter text-[#111111] mb-8 border-l-[6px] border-[#00a85a] pl-4">
           Search Results: <span className="text-[#00a85a]">"{searchQuery}"</span>
         </h2>
       )}
@@ -56,37 +58,67 @@ export default function Home({ searchQuery, categoryQuery }: { searchQuery?: str
         </h2>
       )}
       
-      {Object.entries(categorizedArticles).map(([category, categoryArticles]) => (
-        <div key={category} className="mb-12">
-           {(!categoryQuery && !searchQuery) && (
-             <h3 className="flex items-center text-xs font-black uppercase tracking-widest border-b-[4px] border-[#111111] pb-2 mb-8 text-[#111111]">
-               <span className="w-2 h-2 bg-[#00a85a] mr-2"></span> {category}
-             </h3>
-           )}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {categoryArticles.map(article => (
-              <div key={article.id} className="group flex flex-col h-full">
-                <a href={`#/post/${article.slug}`} className="block flex-grow">
-                  <div className="aspect-[16/9] overflow-hidden bg-gray-100 mb-3 border-b-[4px] border-[#00a85a] relative">
-                    {article.coverImage && (
-                      <img src={article.coverImage} className="w-full h-full object-cover group-hover:scale-105 transition duration-700" alt={article.title} loading="lazy" />
-                    )}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 border-t-[4px] border-gray-100 pt-8 mt-2">
+        <div className="lg:col-span-9">
+          {Object.entries(categorizedArticles).map(([category, categoryArticles]) => (
+            <div key={category} className="mb-12">
+               {(!categoryQuery && !searchQuery) && (
+                 <h3 className="flex items-center text-xs font-black uppercase tracking-widest border-b-[4px] border-[#111111] pb-2 mb-8 text-[#111111]">
+                   <span className="w-2 h-2 bg-[#00a85a] mr-2"></span> {category}
+                 </h3>
+               )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {categoryArticles.map(article => (
+                  <div key={article.id} className="group flex flex-col h-full">
+                    <a href={`#/post/${article.slug}`} className="block flex-grow">
+                      <div className="aspect-[16/9] overflow-hidden bg-gray-100 mb-3 border-b-[4px] border-[#00a85a] relative">
+                        {article.coverImage && (
+                          <img src={article.coverImage} className="w-full h-full object-cover group-hover:scale-105 transition duration-700" alt={article.title} loading="lazy" />
+                        )}
+                      </div>
+                      <h4 className="font-black text-lg leading-snug mb-2 group-hover:text-[#00a85a] transition text-gray-900 tracking-tight">
+                        {article.title}
+                      </h4>
+                      <p className="text-gray-600 text-sm font-sans font-medium line-clamp-2 mb-3 leading-relaxed">
+                        {article.excerpt}
+                      </p>
+                    </a>
+                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-auto pt-2 border-t border-gray-100">
+                      {article.author} <span className="mx-1">•</span> {new Date(article.publishDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    </div>
                   </div>
-                  <h4 className="font-black text-lg leading-snug mb-2 group-hover:text-[#00a85a] transition text-gray-900 tracking-tight">
-                    {article.title}
-                  </h4>
-                  <p className="text-gray-600 text-sm font-sans font-medium line-clamp-2 mb-3 leading-relaxed">
-                    {article.excerpt}
-                  </p>
-                </a>
-                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-auto pt-2">
-                  {article.author} <span className="mx-1">•</span> {new Date(article.publishDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
-      ))}
+
+        {/* Trending Sidebar */}
+        <aside className="lg:col-span-3 border-t lg:border-t-0 lg:border-l border-gray-200 pt-10 lg:pt-0 pl-0 lg:pl-10">
+          <div className="sticky top-10">
+            <h3 className="flex items-center text-xs font-black uppercase tracking-widest border-b-[4px] border-[#111111] pb-2 mb-8 text-[#111111]">
+              <span className="w-2 h-2 bg-[#00a85a] mr-2 animate-pulse"></span> Trending Now
+            </h3>
+            <div className="flex flex-col space-y-8">
+              {trendingArticles.map((article, index) => (
+                <div key={article.id} className="flex gap-4 group">
+                  <span className="text-4xl font-display font-black text-gray-200 leading-none">
+                    {index + 1}
+                  </span>
+                  <div>
+                    <p className="text-[10px] font-black uppercase text-[#00a85a] mb-1 tracking-widest">{article.category}</p>
+                    <a href={`#/post/${article.slug}`}>
+                      <h4 className="text-sm font-bold text-[#111111] group-hover:text-[#00a85a] transition leading-snug">
+                        {article.title}
+                      </h4>
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </aside>
+      </div>
     </div>
   );
 }

@@ -83,9 +83,6 @@ export default function Editor() {
             />
             <button type="submit" className="bg-[#00a85a] text-white py-4 font-black uppercase tracking-widest text-xs hover:bg-white hover:text-[#111111] transition w-full shadow-lg">Authenticate</button>
           </form>
-          <p className="text-[10px] text-gray-500 mt-8 font-sans font-medium uppercase tracking-widest flex items-center justify-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> Authorized Personnel Only
-          </p>
         </div>
       </div>
     );
