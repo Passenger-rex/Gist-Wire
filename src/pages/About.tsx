@@ -40,7 +40,7 @@ export default function About() {
         <div>
           <h2 className="text-2xl font-black uppercase tracking-widest text-[#111111] mb-8">Connect With Us</h2>
           <div className="flex flex-col gap-4">
-             <a href="https://facebook.com/gistwire" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 group">
+             <a href="https://facebook.com/gistwiree" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 group">
                <div className="w-12 h-12 rounded-full bg-[#111111] flex items-center justify-center text-white group-hover:bg-[#1877F2] transition">
                  <Facebook size={20} />
                </div>

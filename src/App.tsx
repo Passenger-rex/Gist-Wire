@@ -32,8 +32,14 @@ export default function App() {
 
     // Global click interceptor for SPA navigation
     const onNavigate = (e: MouseEvent) => {
+      // Allow user to open links in new tabs safely
+      if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) {
+        return;
+      }
+      
       const target = e.target as HTMLElement;
       const a = target.closest('a');
+      
       if (a && a.href && a.href.startsWith(window.location.origin) && !a.getAttribute('target') && !a.getAttribute('download')) {
         const url = new URL(a.href);
         // Skip interception for purely in-page anchor links
@@ -46,11 +52,11 @@ export default function App() {
         window.scrollTo(0, 0);
       }
     };
-    window.addEventListener('click', onNavigate);
+    document.addEventListener('click', onNavigate, { capture: true });
     
     return () => {
       window.removeEventListener("popstate", onPopState);
-      window.removeEventListener("click", onNavigate);
+      document.removeEventListener("click", onNavigate, { capture: true });
       clearTimeout(timer);
     };
   }, []);
@@ -152,7 +158,7 @@ export default function App() {
             <div className="text-white px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-center md:text-left flex justify-between items-center max-w-7xl mx-auto w-full">
               <span>{today}</span>
               <div className="hidden md:flex gap-4 items-center">
-                 <a href="https://facebook.com/gistwire" target="_blank" rel="noopener noreferrer" className="hover:text-[#00a85a] transition" aria-label="Facebook"><Facebook size={12} /></a>
+                 <a href="https://facebook.com/gistwiree" target="_blank" rel="noopener noreferrer" className="hover:text-[#00a85a] transition" aria-label="Facebook"><Facebook size={12} /></a>
                  <a href="https://x.com/gist_wire" target="_blank" rel="noopener noreferrer" className="hover:text-[#00a85a] transition" aria-label="Twitter"><Twitter size={12} /></a>
                  <a href="https://instagram.com/gistwire" target="_blank" rel="noopener noreferrer" className="hover:text-[#00a85a] transition" aria-label="Instagram"><Instagram size={12} /></a>
                  <a href="https://linkedin.com/company/gistwire" target="_blank" rel="noopener noreferrer" className="hover:text-[#00a85a] transition" aria-label="LinkedIn"><Linkedin size={12} /></a>
@@ -277,7 +283,7 @@ export default function App() {
           </div>
 
           <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-start gap-6 text-gray-600 mt-auto shrink-0">
-             <a href="https://facebook.com/gistwire" target="_blank" rel="noopener noreferrer" className="hover:text-[#111111] transition" aria-label="Facebook"><Facebook size={20} /></a>
+             <a href="https://facebook.com/gistwiree" target="_blank" rel="noopener noreferrer" className="hover:text-[#111111] transition" aria-label="Facebook"><Facebook size={20} /></a>
              <a href="https://x.com/gist_wire" target="_blank" rel="noopener noreferrer" className="hover:text-[#111111] transition" aria-label="Twitter"><Twitter size={20} /></a>
              <a href="https://instagram.com/gistwire" target="_blank" rel="noopener noreferrer" className="hover:text-[#111111] transition" aria-label="Instagram"><Instagram size={20} /></a>
              <a href="https://linkedin.com/company/gistwire" target="_blank" rel="noopener noreferrer" className="hover:text-[#111111] transition" aria-label="LinkedIn"><Linkedin size={20} /></a>
@@ -322,7 +328,7 @@ export default function App() {
              <h4 className="font-bold uppercase tracking-widest text-[#00a85a] mb-4 text-xs shrink-0 inline-block border-b-2 border-[#00a85a] pb-1">Connect</h4>
              <p className="text-xs text-gray-500 mb-4 font-medium">Follow us on social media for live updates as they break.</p>
              <div className="flex flex-wrap gap-2">
-              <a href="https://facebook.com/gistwire" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-[#222222] flex items-center justify-center hover:bg-[#00a85a] transition text-white" aria-label="Facebook"><Facebook size={14} /></a>
+              <a href="https://facebook.com/gistwiree" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-[#222222] flex items-center justify-center hover:bg-[#00a85a] transition text-white" aria-label="Facebook"><Facebook size={14} /></a>
               <a href="https://x.com/gist_wire" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-[#222222] flex items-center justify-center hover:bg-[#00a85a] transition text-white" aria-label="Twitter"><Twitter size={14} /></a>
               <a href="https://instagram.com/gistwire" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-[#222222] flex items-center justify-center hover:bg-[#00a85a] transition text-white" aria-label="Instagram"><Instagram size={14} /></a>
               <a href="https://linkedin.com/company/gistwire" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-[#222222] flex items-center justify-center hover:bg-[#00a85a] transition text-white" aria-label="LinkedIn"><Linkedin size={14} /></a>
