@@ -12,6 +12,7 @@ export interface CommentType {
 }
 
 export const getArticles = async (): Promise<Article[]> => {
+  if (!db) return [];
   try {
     const querySnapshot = await getDocs(collection(db, "articles"));
     const articles: Article[] = [];
@@ -26,6 +27,7 @@ export const getArticles = async (): Promise<Article[]> => {
 };
 
 export const saveArticles = async (articles: Article[]) => {
+  if (!db) return;
   try {
     for (const article of articles) {
       await setDoc(doc(db, "articles", article.id), article);
@@ -36,6 +38,7 @@ export const saveArticles = async (articles: Article[]) => {
 };
 
 export const getArticleBySlug = async (slug: string): Promise<Article | undefined> => {
+  if (!db) return undefined;
   try {
     const q = query(collection(db, "articles"), where("slug", "==", slug));
     const querySnapshot = await getDocs(q);
@@ -49,6 +52,7 @@ export const getArticleBySlug = async (slug: string): Promise<Article | undefine
 };
 
 export const incrementViews = async (slug: string) => {
+  if (!db) return;
   try {
     const q = query(collection(db, "articles"), where("slug", "==", slug));
     const querySnapshot = await getDocs(q);
@@ -64,6 +68,7 @@ export const incrementViews = async (slug: string) => {
 };
 
 export const deleteArticle = async (id: string) => {
+  if (!db) return;
   try {
     await deleteDoc(doc(db, "articles", id));
   } catch (e) {
@@ -72,6 +77,7 @@ export const deleteArticle = async (id: string) => {
 };
 
 export const getComments = async (articleId: string): Promise<CommentType[]> => {
+  if (!db) return [];
   try {
     const q = query(collection(db, "comments"), where("articleId", "==", articleId));
     const querySnapshot = await getDocs(q);
@@ -87,6 +93,7 @@ export const getComments = async (articleId: string): Promise<CommentType[]> => 
 };
 
 export const saveComment = async (comment: CommentType) => {
+  if (!db) return;
   try {
     await setDoc(doc(db, "comments", comment.id), comment);
   } catch (e) {
@@ -95,6 +102,7 @@ export const saveComment = async (comment: CommentType) => {
 };
 
 export const likeComment = async (commentId: string) => {
+  if (!db) return;
   try {
     const docRef = doc(db, "comments", commentId);
     await updateDoc(docRef, {
