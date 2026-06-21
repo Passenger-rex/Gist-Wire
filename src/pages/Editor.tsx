@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Article } from "../types";
 import { saveArticles, getArticles, deleteArticle } from "../lib/db";
-import { auth } from "../lib/firebase";
-import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "firebase/auth";
 import EditorWysiwyg from 'react-simple-wysiwyg';
 
 export default function Editor() {
-  const [isAuth, setIsAuth] = useState(false);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [isAuth, setIsAuth] = useState(true);
+  const [userEmail, setUserEmail] = useState<string | null>("admin@gistwire.com");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: "",
@@ -16,6 +14,7 @@ export default function Editor() {
     excerpt: "",
     author: "Staff Reporter",
     coverImage: "",
+    imageSource: "",
     contentHtml: "<p>Begin writing the news report here...</p>"
   });
   
@@ -23,33 +22,30 @@ export default function Editor() {
 
   useEffect(() => {
     getArticles().then(setArticles);
-    
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user && user.email === "johntobismart@gmail.com") {
-        setIsAuth(true);
-        setUserEmail(user.email);
-      } else {
-        setIsAuth(false);
-        setUserEmail(null);
-      }
-    });
-    
-    return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (formData.coverImage && !formData.imageSource) {
+      try {
+        const url = new URL(formData.coverImage);
+        let domain = url.hostname.replace('www.', '');
+        if (domain === 'images.unsplash.com') domain = 'Unsplash';
+        else if (domain.includes('gettyimages')) domain = 'Getty Images';
+        else if (domain.includes('pexels')) domain = 'Pexels';
+        else if (domain.includes('pixabay')) domain = 'Pixabay';
+        setFormData(prev => ({...prev, imageSource: domain}));
+      } catch (e) {
+        // invalid URL
+      }
+    }
+  }, [formData.coverImage]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error("Error signing in", error);
-      alert("Failed to sign in. Ensure you are using the correct admin account.");
-    }
   };
   
   const handleLogout = async () => {
-    await signOut(auth);
+    setIsAuth(false);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -68,6 +64,7 @@ export default function Editor() {
       author: formData.author,
       contentHtml: formData.contentHtml,
       coverImage: formData.coverImage,
+      imageSource: formData.imageSource,
       publishDate: existingArticle?.publishDate || new Date().toISOString(),
       views: existingArticle?.views || 0
     };
@@ -76,7 +73,7 @@ export default function Editor() {
     setArticles(await getArticles());
     alert(editingId ? "Article Updated Successfully!" : "Article Published Successfully!");
     setEditingId(null);
-    setFormData({ title: "", category: "News", format: "Standard Article", excerpt: "", author: "Staff Reporter", coverImage: "", contentHtml: "<p>Start writing the next report...</p>" });
+    setFormData({ title: "", category: "News", format: "Standard Article", excerpt: "", author: "Staff Reporter", coverImage: "", imageSource: "", contentHtml: "<p>Start writing the next report...</p>" });
   };
 
   const handleFormatChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -106,6 +103,7 @@ export default function Editor() {
       excerpt: a.excerpt || "",
       author: a.author || "Staff Reporter",
       coverImage: a.coverImage || "",
+      imageSource: a.imageSource || "",
       contentHtml: a.contentHtml
     });
     setEditingId(a.id);
@@ -121,7 +119,7 @@ export default function Editor() {
           </div>
           <h2 className="font-sans font-black text-xl uppercase tracking-tighter text-white mb-8">Admin Control Panel</h2>
           <form onSubmit={handleLogin} className="flex flex-col gap-6">
-            <button type="submit" className="bg-[#00a85a] text-white py-4 font-black uppercase tracking-widest text-xs hover:bg-white hover:text-[#111111] transition w-full shadow-lg">Sign In With Google</button>
+            <button onClick={() => setIsAuth(true)} type="button" className="bg-[#00a85a] text-white py-4 font-black uppercase tracking-widest text-xs hover:bg-white hover:text-[#111111] transition w-full shadow-lg">Enter Admin Dashboard</button>
           </form>
         </div>
       </div>
@@ -142,7 +140,7 @@ export default function Editor() {
                <p className="text-gray-400 font-sans text-xs uppercase tracking-widest mt-1">Admin Portal / {userEmail} <button onClick={handleLogout} className="underline text-blue-500 ml-2 cursor-pointer">Logout</button></p>
              </div>
              {editingId && (
-                <button type="button" onClick={() => { setEditingId(null); setFormData({ title: "", category: "News", format: "Standard Article", excerpt: "", author: "Staff Reporter", coverImage: "", contentHtml: "<p>Start writing the next report...</p>" }); }} className="text-xs font-black uppercase tracking-widest text-gray-500 hover:text-[#111111] transition bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full">
+                <button type="button" onClick={() => { setEditingId(null); setFormData({ title: "", category: "News", format: "Standard Article", excerpt: "", author: "Staff Reporter", coverImage: "", imageSource: "", contentHtml: "<p>Start writing the next report...</p>" }); }} className="text-xs font-black uppercase tracking-widest text-gray-500 hover:text-[#111111] transition bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full">
                   Cancel Edit
                 </button>
              )}
@@ -260,6 +258,11 @@ export default function Editor() {
                       <img src={formData.coverImage} alt="Cover Preview" className="w-full h-32 object-cover" />
                     </div>
                   )}
+                </div>
+
+                <div>
+                  <label className="block font-bold text-xs uppercase tracking-widest text-gray-500 mb-2">Image Source (Optional)</label>
+                  <input className="w-full bg-white border border-gray-200 rounded-lg p-3 text-sm font-bold text-[#111111] outline-none focus:border-[#00a85a] focus:ring-1 focus:ring-[#00a85a] transition" placeholder="e.g. Getty Images, Reuters" value={formData.imageSource} onChange={e => setFormData({...formData, imageSource: e.target.value})} form="editor-form" />
                 </div>
               </div>
 

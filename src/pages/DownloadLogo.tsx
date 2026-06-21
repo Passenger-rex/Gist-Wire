@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef } from 'react';
-import { Helmet } from 'react-helmet-async';
 import { toPng } from 'html-to-image';
 import Logo from '../components/Logo';
 
@@ -26,10 +25,6 @@ export default function DownloadLogo() {
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-32 text-center flex flex-col items-center justify-center overflow-x-hidden">
-      <Helmet>
-        <title>Download Logo - GistWire</title>
-      </Helmet>
-      
       <h1 className="text-3xl font-sans font-black uppercase text-[#111111] mb-4 tracking-tighter">Download Logo</h1>
       <p className="text-gray-500 mb-8 max-w-md">Get the official high-resolution PNG asset for GistWire.</p>
       

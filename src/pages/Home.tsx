@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Helmet } from "react-helmet-async";
 import { Article } from "../types";
 import { getArticles } from "../lib/db";
 
@@ -42,9 +41,6 @@ export default function Home({ searchQuery, categoryQuery }: { searchQuery?: str
 
   if (articles.length === 0) return (
     <div className="p-20 text-center">
-      <Helmet>
-        <title>{searchQuery ? `Search Results for "${searchQuery}"` : categoryQuery ? `${categoryQuery} News` : "No News Available"}</title>
-      </Helmet>
       <p className="text-gray-500 font-sans font-bold text-lg">
         {searchQuery ? `No results found for "${searchQuery}".` : categoryQuery ? `No articles found in category "${categoryQuery}".` : "No news currently available. Check back later."}
       </p>
@@ -112,14 +108,14 @@ export default function Home({ searchQuery, categoryQuery }: { searchQuery?: str
           {Object.entries(categorizedArticles).map(([category, categoryArticles]) => (
             <div key={category} className="mb-12">
                {(!categoryQuery && !searchQuery) && (
-                 <h3 className="flex items-center text-xs font-black uppercase tracking-widest border-b-[4px] border-[#111111] pb-2 mb-8 text-[#111111]">
-                   <span className="w-2 h-2 bg-[#00a85a] mr-2"></span> {category}
-                 </h3>
+                 <a href={`/category/${category.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} className="flex items-center text-xs font-black uppercase tracking-widest border-b-[4px] border-[#111111] pb-2 mb-8 text-[#111111] hover:text-[#00a85a] transition group">
+                   <span className="w-2 h-2 bg-[#00a85a] mr-2 group-hover:bg-[#111111] transition"></span> {category}
+                 </a>
                )}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {categoryArticles.map(article => (
                   <div key={article.id} className="group flex flex-col h-full">
-                    <a href={`#/post/${article.slug}`} className="block flex-grow">
+                    <a href={`/post/${article.slug}`} className="block flex-grow">
                       <div className="aspect-[16/9] overflow-hidden bg-gray-100 mb-3 border-b-[4px] border-[#00a85a] relative">
                         {article.coverImage && (
                           <img src={article.coverImage} className="w-full h-full object-cover group-hover:scale-105 transition duration-700" alt={article.title} loading="lazy" />
@@ -156,7 +152,7 @@ export default function Home({ searchQuery, categoryQuery }: { searchQuery?: str
                   </span>
                   <div>
                     <p className="text-[10px] font-black uppercase text-[#00a85a] mb-1 tracking-widest">{article.category}</p>
-                    <a href={`#/post/${article.slug}`}>
+                    <a href={`/post/${article.slug}`}>
                       <h4 className="text-sm font-bold text-[#111111] group-hover:text-[#00a85a] transition leading-snug">
                         {article.title}
                       </h4>

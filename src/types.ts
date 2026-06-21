@@ -7,7 +7,9 @@ export interface Article {
   excerpt: string;
   contentHtml: string;
   coverImage?: string;
+  imageSource?: string;
   category: string;
   format?: string;
   views?: number;
+  likes?: number;
 }

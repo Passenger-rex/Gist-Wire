@@ -1,15 +1,9 @@
-import { Helmet } from "react-helmet-async";
 import Logo from "../components/Logo";
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react";
 
 export default function About() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-16">
-      <Helmet>
-        <title>About Us - GistWire</title>
-        <meta name="description" content="Learn more about GistWire Media, our mission, and our dedicated team of journalists." />
-      </Helmet>
-
       <div className="text-center mb-16">
         <h1 className="text-4xl md:text-5xl font-sans font-black uppercase tracking-tighter text-[#111111] mb-6">About GistWire</h1>
         <div className="w-24 h-1 bg-[#00a85a] mx-auto mb-8"></div>

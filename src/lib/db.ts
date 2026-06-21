@@ -1,5 +1,3 @@
-import { collection, doc, getDocs, getDoc, setDoc, deleteDoc, updateDoc, increment, query, where } from "firebase/firestore";
-import { db } from "./firebase";
 import { Article } from "../types";
 
 export interface CommentType {
@@ -11,100 +9,90 @@ export interface CommentType {
   likes: number;
 }
 
+const getStoredArticles = (): Article[] => {
+  const data = localStorage.getItem("gistwire_articles");
+  return data ? JSON.parse(data) : [];
+};
+
+const setStoredArticles = (articles: Article[]) => {
+  localStorage.setItem("gistwire_articles", JSON.stringify(articles));
+};
+
+const getStoredComments = (): CommentType[] => {
+  const data = localStorage.getItem("gistwire_comments");
+  return data ? JSON.parse(data) : [];
+};
+
+const setStoredComments = (comments: CommentType[]) => {
+  localStorage.setItem("gistwire_comments", JSON.stringify(comments));
+};
+
 export const getArticles = async (): Promise<Article[]> => {
-  try {
-    if (!db) return [];
-    const querySnapshot = await getDocs(collection(db, "articles"));
-    const articles: Article[] = [];
-    querySnapshot.forEach((doc) => {
-      articles.push(doc.data() as Article);
-    });
-    return articles;
-  } catch (e) {
-    console.error("Error fetching articles", e);
-    return [];
-  }
+  return getStoredArticles();
 };
 
 export const saveArticles = async (articles: Article[]) => {
-  // This function is less common in Firebase unless batch writing.
-  // Assuming it's meant to save individual new articles or sync an array.
-  try {
-    for (const article of articles) {
-      await setDoc(doc(db, "articles", article.id), article);
-    }
-  } catch (e) {
-    console.error("Error saving articles", e);
+  setStoredArticles(articles);
+};
+
+export const getArticle = async (id: string): Promise<Article | undefined> => {
+  return getStoredArticles().find(a => a.id === id);
+};
+
+export const saveArticle = async (article: Article) => {
+  let articles = getStoredArticles();
+  const index = articles.findIndex(a => a.id === article.id);
+  if (index > -1) {
+    articles[index] = article;
+  } else {
+    articles.push(article);
   }
+  setStoredArticles(articles);
 };
 
 export const getArticleBySlug = async (slug: string): Promise<Article | undefined> => {
-  try {
-    const q = query(collection(db, "articles"), where("slug", "==", slug));
-    const querySnapshot = await getDocs(q);
-    if (!querySnapshot.empty) {
-      return querySnapshot.docs[0].data() as Article;
-    }
-  } catch (e) {
-    console.error("Error fetching article by slug", e);
-  }
-  return undefined;
+  return getStoredArticles().find(a => a.slug === slug);
 };
 
 export const incrementViews = async (slug: string) => {
-  try {
-    const q = query(collection(db, "articles"), where("slug", "==", slug));
-    const querySnapshot = await getDocs(q);
-    if (!querySnapshot.empty) {
-      const docRef = querySnapshot.docs[0].ref;
-      await updateDoc(docRef, {
-        views: increment(1)
-      });
-    }
-  } catch (e) {
-    console.error("Error incrementing views", e);
+  let articles = getStoredArticles();
+  const article = articles.find(a => a.slug === slug);
+  if (article) {
+    article.views = (article.views || 0) + 1;
+    setStoredArticles(articles);
+  }
+};
+
+export const likeArticle = async (slug: string, isLiking: boolean = true) => {
+  let articles = getStoredArticles();
+  const article = articles.find(a => a.slug === slug);
+  if (article) {
+    article.likes = (article.likes || 0) + (isLiking ? 1 : -1);
+    setStoredArticles(articles);
   }
 };
 
 export const deleteArticle = async (id: string) => {
-  try {
-    await deleteDoc(doc(db, "articles", id));
-  } catch (e) {
-    console.error("Error deleting article", e);
-  }
+  let articles = getStoredArticles();
+  articles = articles.filter(a => a.id !== id);
+  setStoredArticles(articles);
 };
 
 export const getComments = async (articleId: string): Promise<CommentType[]> => {
-  try {
-    const q = query(collection(db, "comments"), where("articleId", "==", articleId));
-    const querySnapshot = await getDocs(q);
-    const comments: CommentType[] = [];
-    querySnapshot.forEach((doc) => {
-      comments.push(doc.data() as CommentType);
-    });
-    return comments;
-  } catch (e) {
-    console.error("Error fetching comments", e);
-    return [];
-  }
+  return getStoredComments().filter(c => c.articleId === articleId);
 };
 
 export const saveComment = async (comment: CommentType) => {
-  try {
-    await setDoc(doc(db, "comments", comment.id), comment);
-  } catch (e) {
-    console.error("Error saving comment", e);
-  }
+  let comments = getStoredComments();
+  comments.push(comment);
+  setStoredComments(comments);
 };
 
-export const likeComment = async (commentId: string) => {
-  try {
-    const docRef = doc(db, "comments", commentId);
-    await updateDoc(docRef, {
-      likes: increment(1)
-    });
-  } catch (e) {
-    console.error("Error liking comment", e);
+export const likeComment = async (commentId: string, isLiking: boolean = true) => {
+  let comments = getStoredComments();
+  const comment = comments.find(c => c.id === commentId);
+  if (comment) {
+    comment.likes = (comment.likes || 0) + (isLiking ? 1 : -1);
+    setStoredComments(comments);
   }
 };
-

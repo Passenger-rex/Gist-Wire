@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { Helmet } from "react-helmet-async";
 import Home from "./pages/Home";
 import ArticleView from "./pages/ArticleView";
 import Editor from "./pages/Editor";
@@ -33,8 +32,12 @@ export default function App() {
       const target = e.target as HTMLElement;
       const a = target.closest('a');
       if (a && a.href && a.href.startsWith(window.location.origin) && !a.getAttribute('target') && !a.getAttribute('download')) {
-        e.preventDefault();
         const url = new URL(a.href);
+        if (url.pathname === window.location.pathname && url.hash) {
+          // Let default browser behavior handle page-internal hash links
+          return;
+        }
+        e.preventDefault();
         window.history.pushState({}, '', url.pathname + url.search);
         setRoute(url.pathname + url.search);
         window.scrollTo(0, 0);
@@ -96,7 +99,20 @@ export default function App() {
     pageTitle = `Search Results for "${query}" - GistWire`;
     content = <Home searchQuery={query} />;
   } else if (route.startsWith("/category/")) {
-    const cat = decodeURIComponent(route.replace("/category/", ""));
+    const slug = route.replace("/category/", "");
+    const map: Record<string, string> = {
+      "celebrity-news": "Celebrity News",
+      "music": "Music",
+      "education": "Education",
+      "health": "Health",
+      "food-lifestyle": "Food & Lifestyle",
+      "technology": "Technology",
+      "business": "Business",
+      "entertainment": "Entertainment",
+      "sport": "Sport",
+      "global": "Global"
+    };
+    const cat = map[slug] || decodeURIComponent(slug);
     pageTitle = `${cat} News - GistWire`;
     content = <Home categoryQuery={cat} />;
   } else if (route === "/write") {
@@ -119,26 +135,20 @@ export default function App() {
 
   const navLinks = [
     { name: "Home", href: "/" },
-    { name: "Celebrity News", href: "/category/Celebrity%20News" },
-    { name: "Music", href: "/category/Music" },
-    { name: "Education", href: "/category/Education" },
-    { name: "Health", href: "/category/Health" },
-    { name: "Food & Lifestyle", href: "/category/Food%20%26%20Lifestyle" },
-    { name: "Technology", href: "/category/Technology" },
-    { name: "Business", href: "/category/Business" },
-    { name: "Entertainment", href: "/category/Entertainment" },
-    { name: "Sport", href: "/category/Sport" },
-    { name: "Global", href: "/category/Global" }
+    { name: "Celebrity News", href: "/category/celebrity-news" },
+    { name: "Music", href: "/category/music" },
+    { name: "Education", href: "/category/education" },
+    { name: "Health", href: "/category/health" },
+    { name: "Food & Lifestyle", href: "/category/food-lifestyle" },
+    { name: "Technology", href: "/category/technology" },
+    { name: "Business", href: "/category/business" },
+    { name: "Entertainment", href: "/category/entertainment" },
+    { name: "Sport", href: "/category/sport" },
+    { name: "Global", href: "/category/global" }
   ];
 
   return (
     <div className="min-h-screen flex flex-col font-sans bg-gray-50">
-      <Helmet>
-        <title>{pageTitle}</title>
-        <meta name="description" content="Dedicated to delivering comprehensive coverage, insightful analysis, and the latest trends shaping politics, business, and entertainment." />
-        <meta name="robots" content="index, follow" />
-      </Helmet>
-
       <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-[100]">
         {/* Top Header auto-collapses on scroll */}
         <div className={`transition-all duration-300 ease-in-out grid ${isScrolled ? 'grid-rows-[0fr] opacity-0' : 'grid-rows-[1fr] opacity-100'}`}>
@@ -297,10 +307,10 @@ export default function App() {
           <div>
             <h4 className="font-bold uppercase tracking-widest text-[#00a85a] mb-4 text-xs shrink-0 inline-block border-b-2 border-[#00a85a] pb-1">Quick Links</h4>
             <div className="flex flex-col gap-3 font-medium text-xs">
-              <a href="/category/Celebrity%20News" className="text-gray-300 hover:text-white transition uppercase tracking-wider">Celebrity News</a>
-              <a href="/category/Music" className="text-gray-300 hover:text-white transition uppercase tracking-wider">Music Updates</a>
-              <a href="/category/Entertainment" className="text-gray-300 hover:text-white transition uppercase tracking-wider">Entertainment</a>
-              <a href="/category/Technology" className="text-gray-300 hover:text-white transition uppercase tracking-wider">Tech & AI</a>
+              <a href="/category/celebrity-news" className="text-gray-300 hover:text-white transition uppercase tracking-wider">Celebrity News</a>
+              <a href="/category/music" className="text-gray-300 hover:text-white transition uppercase tracking-wider">Music Updates</a>
+              <a href="/category/entertainment" className="text-gray-300 hover:text-white transition uppercase tracking-wider">Entertainment</a>
+              <a href="/category/technology" className="text-gray-300 hover:text-white transition uppercase tracking-wider">Tech & AI</a>
             </div>
           </div>
 

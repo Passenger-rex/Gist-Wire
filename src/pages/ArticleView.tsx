@@ -1,32 +1,80 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Helmet } from "react-helmet-async";
 import { Article } from "../types";
-import { getArticleBySlug, getComments, saveComment, likeComment, CommentType, incrementViews } from "../lib/db";
+import { getArticleBySlug, getComments, saveComment, likeComment, CommentType, incrementViews, getArticles } from "../lib/db";
 import { MessageCircle, ThumbsUp, Facebook, Twitter, MessageCircle as WhatsApp, Link as LinkIcon } from "lucide-react";
+
+function RecentArticles({ excludeId, category, limit = 3, inline = false }: { excludeId: string, category?: string, limit?: number, inline?: boolean }) {
+  const [articles, setArticles] = useState<Article[]>([]);
+  useEffect(() => {
+    getArticles().then(all => {
+      // Sort by publishDate descending
+      let sorted = all.sort((a,b) => new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime());
+      if (category) {
+        sorted = sorted.filter(a => a.category === category);
+      }
+      setArticles(sorted.filter(a => a.id !== excludeId).slice(0, limit));
+    });
+  }, [excludeId, category, limit]);
+
+  if (articles.length === 0) {
+    return <p className="text-gray-500 font-medium text-sm">No other headlines right now.</p>;
+  }
+
+  return (
+    <>
+      {articles.map(article => (
+        <a key={article.id} href={`/post/${article.slug}`} className={`flex flex-col gap-3 group ${inline ? 'h-full' : ''}`}>
+          <div className={`w-full bg-gray-200 flex-shrink-0 border-b-[4px] border-[#00a85a] ${inline ? 'h-40' : 'h-32'}`}>
+            {article.coverImage ? (
+              <img src={article.coverImage} className="w-full h-full object-cover group-hover:opacity-80 transition" alt="thumbnail" loading="lazy" />
+            ) : (
+              <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 group-hover:opacity-80 transition italic text-xs">No Image</div>
+            )}
+          </div>
+          <div className={`${inline ? 'flex flex-col flex-grow' : ''}`}>
+            <p className="text-[10px] font-black uppercase text-[#00a85a] mb-1 tracking-widest">{article.category}</p>
+            <h4 className="text-sm font-bold text-gray-900 group-hover:text-[#00a85a] transition leading-snug">{article.title}</h4>
+          </div>
+        </a>
+      ))}
+    </>
+  );
+}
 
 export default function ArticleView({ slug }: { slug: string }) {
   const [article, setArticle] = useState<Article | null>(null);
+  const [loading, setLoading] = useState(true);
   const [comments, setComments] = useState<CommentType[]>([]);
   const [newCommentName, setNewCommentName] = useState("");
   const [newCommentText, setNewCommentText] = useState("");
   const [headings, setHeadings] = useState<{ id: string, text: string, level: string }[]>([]);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [likedComments, setLikedComments] = useState<Record<string, boolean>>({});
+  const [hasLikedArticle, setHasLikedArticle] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  const calculateReadTime = (text: string) => {
+  const calculateReadTime = (text: string | undefined | null) => {
+    if (!text) return 1;
     const wordsPerMinute = 200;
     const cleanText = text.replace(/<[^>]*>?/gm, ''); // remove html tags
     const noOfWords = cleanText.split(/\s+/).length;
-    return Math.ceil(noOfWords / wordsPerMinute);
+    return Math.max(1, Math.ceil(noOfWords / wordsPerMinute));
   };
 
   useEffect(() => {
+    setLoading(true);
     getArticleBySlug(slug).then(found => {
       setArticle(found || null);
       if (found) {
         getComments(found.id).then(setComments);
+        const storedLikedArticles = JSON.parse(localStorage.getItem('likedArticles') || '{}');
+        setHasLikedArticle(!!storedLikedArticles[found.id]);
+        
+        const storedLikedComments = JSON.parse(localStorage.getItem('likedComments') || '{}');
+        setLikedComments(storedLikedComments);
         incrementViews(slug);
       }
+      setLoading(false);
     });
     window.scrollTo(0, 0);
   }, [slug]);
@@ -79,26 +127,66 @@ export default function ArticleView({ slug }: { slug: string }) {
     setNewCommentText("");
   };
 
+  const handleLikeArticle = async () => {
+    if (!article) return;
+    const isLiking = !hasLikedArticle;
+    setHasLikedArticle(isLiking);
+    setArticle({...article, likes: (article.likes || 0) + (isLiking ? 1 : -1)});
+    
+    const storedLikedArticles = JSON.parse(localStorage.getItem('likedArticles') || '{}');
+    if (isLiking) storedLikedArticles[article.id] = true;
+    else delete storedLikedArticles[article.id];
+    localStorage.setItem('likedArticles', JSON.stringify(storedLikedArticles));
+
+    import("../lib/db").then(m => m.likeArticle(article.slug, isLiking));
+  };
+
   const handleLikeComment = async (commentId: string) => {
     if (!article) return;
-    await likeComment(commentId);
-    setComments(await getComments(article.id));
+    const isLiking = !likedComments[commentId];
+    setLikedComments(prev => {
+      const next = {...prev, [commentId]: isLiking};
+      localStorage.setItem('likedComments', JSON.stringify(next));
+      return next;
+    });
+    setComments(comments.map(c => c.id === commentId ? { ...c, likes: c.likes + (isLiking ? 1 : -1) } : c));
+    await likeComment(commentId, isLiking);
   };
 
   const shareUrl = window.location.href;
   const shareTitle = article?.title || "Check out this article!";
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const handleReply = (name: string) => {
+    setNewCommentText(`@${name} `);
+    textareaRef.current?.focus();
+    document.getElementById("comment-form")?.scrollIntoView({ behavior: "smooth" });
+  };
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(shareUrl);
     alert("Link copied to clipboard!");
   };
 
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8 lg:py-12 animate-pulse">
+        <div className="h-10 bg-gray-200 rounded w-1/4 mb-4"></div>
+        <div className="h-20 bg-gray-200 rounded w-3/4 mb-8"></div>
+        <div className="h-64 bg-gray-200 rounded w-full mb-8"></div>
+        <div className="space-y-4">
+          <div className="h-4 bg-gray-200 rounded w-full"></div>
+          <div className="h-4 bg-gray-200 rounded w-full"></div>
+          <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+        </div>
+      </div>
+    );
+  }
+
   if (!article) {
     return (
       <div className="max-w-2xl mx-auto px-6 py-32 text-center h-[50vh] flex flex-col items-center justify-center">
-        <Helmet>
-          <title>Article Not Found - GistWire</title>
-        </Helmet>
         <h1 className="text-4xl font-sans font-black uppercase text-[#111111] mb-6 tracking-tighter">Article not found</h1>
         <a href="/" className="inline-block px-8 py-4 bg-[#00a85a] text-white font-black uppercase tracking-widest text-xs hover:bg-[#111111] transition">Return to Publication</a>
       </div>
@@ -112,11 +200,6 @@ export default function ArticleView({ slug }: { slug: string }) {
         style={{ width: `${scrollProgress}%` }}
       />
       <article className="max-w-7xl mx-auto px-4 py-8 lg:py-12">
-        <Helmet>
-          <title>{`${article.title} - GistWire`}</title>
-          <meta name="description" content={article.excerpt || "Read full article on GistWire."} />
-          {article.coverImage && <meta property="og:image" content={article.coverImage} />}
-        </Helmet>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           
           {/* Social Share Sidebar (Desktop) */}
@@ -141,15 +224,9 @@ export default function ArticleView({ slug }: { slug: string }) {
             <div className="mb-8 border-b-4 border-[#111111] pb-6">
               <div className="flex items-center gap-3 mb-4">
                 <span className="w-3 h-3 bg-[#00a85a]"></span>
-                <a href={`/category/${encodeURIComponent(article.category)}`} className="text-[#00a85a] font-black uppercase tracking-widest text-xs hover:text-[#00c86b] transition-colors">
+                <a href={`/category/${article.category.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} className="text-[#00a85a] font-black uppercase tracking-widest text-xs hover:text-[#00c86b] transition text-nowrap whitespace-nowrap">
                   {article.category}
                 </a>
-                {article.format && (
-                   <>
-                     <span className="text-gray-300">/</span>
-                     <span className="text-gray-500 font-bold uppercase tracking-widest text-xs">{article.format}</span>
-                   </>
-                )}
               </div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-sans font-black text-[#111111] leading-[1.1] tracking-tight mb-4">
                 {article.title}
@@ -168,25 +245,36 @@ export default function ArticleView({ slug }: { slug: string }) {
                     <div className="text-[11px] font-bold text-gray-500 flex items-center gap-2 uppercase tracking-widest">
                       <span>Published: {new Date(article.publishDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", hour: '2-digit', minute: '2-digit' })}</span>
                       <span className="text-gray-300">•</span>
-                      <span>{calculateReadTime(article.content)} min read</span>
+                      <span>{calculateReadTime(article.contentHtml)} min read</span>
                     </div>
                   </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-3 mt-4 sm:mt-0">
+                  <button 
+                    onClick={handleLikeArticle}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-full border-2 transition text-sm font-bold uppercase tracking-widest ${hasLikedArticle ? 'bg-[#00a85a] text-white border-[#00a85a]' : 'border-gray-200 text-gray-600 hover:border-[#00a85a] hover:text-[#00a85a]'}`}
+                  >
+                    <ThumbsUp size={16} /> 
+                    {article.likes || 0}
+                  </button>
+                  <div className="flex lg:hidden gap-3 border-l-2 border-gray-200 pl-3">
+                    <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noreferrer" className="text-gray-500 hover:text-blue-600 transition"><Facebook size={20} /></a>
+                    <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`} target="_blank" rel="noreferrer" className="text-gray-500 hover:text-[#111111] transition"><Twitter size={20} /></a>
+                    <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent(shareTitle + " " + shareUrl)}`} target="_blank" rel="noreferrer" className="text-gray-500 hover:text-[#25D366] transition"><WhatsApp size={20} /></a>
+                    <button onClick={handleCopyLink} className="text-gray-500 hover:text-[#00a85a] transition"><LinkIcon size={20} /></button>
+                  </div>
+                </div>
               </div>
-              <div className="flex lg:hidden gap-3 mt-4 sm:mt-0">
-                <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noreferrer" className="text-gray-500 hover:text-blue-600 transition"><Facebook size={20} /></a>
-                <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`} target="_blank" rel="noreferrer" className="text-gray-500 hover:text-[#111111] transition"><Twitter size={20} /></a>
-                <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent(shareTitle + " " + shareUrl)}`} target="_blank" rel="noreferrer" className="text-gray-500 hover:text-[#25D366] transition"><WhatsApp size={20} /></a>
-                <button onClick={handleCopyLink} className="text-gray-500 hover:text-[#00a85a] transition"><LinkIcon size={20} /></button>
-              </div>
-            </div>
           </div>
 
           {article.coverImage && (
             <figure className="mb-10">
                <img src={article.coverImage} alt={article.title} className="w-full object-cover bg-gray-100 border-b-[6px] border-[#00a85a]" />
-              <figcaption className="text-xs text-gray-500 mt-3 font-sans font-medium pb-4 border-b border-gray-200 uppercase tracking-widest">
-                Provided via GistWire Partner Networks
-              </figcaption>
+              {article.imageSource && (
+                <figcaption className="text-xs text-gray-500 mt-3 font-sans font-medium pb-4 border-b border-gray-200 uppercase tracking-widest">
+                  Source: {article.imageSource}
+                </figcaption>
+              )}
             </figure>
           )}
 
@@ -222,6 +310,16 @@ export default function ArticleView({ slug }: { slug: string }) {
                           prose-li:marker:text-[#00a85a] prose-img:border-b-[4px] prose-img:border-[#00a85a]" 
                dangerouslySetInnerHTML={{ __html: article.contentHtml }} />
 
+          {/* Related Articles Section */}
+          <div className="mt-16 pt-10 border-t-[4px] border-gray-100">
+             <h3 className="font-sans font-black text-2xl uppercase tracking-tighter mb-8 text-[#111111]">
+               More in {article.category}
+             </h3>
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <RecentArticles excludeId={article.id} category={article.category} limit={2} inline />
+             </div>
+          </div>
+
           {/* Comments Section */}
           <div className="mt-16 pt-10 border-t-[4px] border-gray-200">
             <h3 className="font-sans font-black text-2xl uppercase tracking-tighter mb-8 flex items-center gap-3 text-[#111111]">
@@ -231,7 +329,7 @@ export default function ArticleView({ slug }: { slug: string }) {
 
             <div className="bg-gray-50 p-6 border-l-[4px] border-[#00a85a] mb-10">
               <h4 className="font-bold text-sm uppercase tracking-widest text-[#111111] mb-4">Leave a Reply</h4>
-              <form onSubmit={handlePostComment} className="flex flex-col gap-4">
+              <form id="comment-form" onSubmit={handlePostComment} className="flex flex-col gap-4">
                 <input 
                   type="text" 
                   placeholder="Your Name" 
@@ -241,6 +339,7 @@ export default function ArticleView({ slug }: { slug: string }) {
                   required
                 />
                 <textarea 
+                  ref={textareaRef}
                   placeholder="Share your thoughts..." 
                   value={newCommentText}
                   onChange={(e) => setNewCommentText(e.target.value)}
@@ -268,10 +367,10 @@ export default function ArticleView({ slug }: { slug: string }) {
                     {comment.text}
                   </p>
                   <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-widest text-gray-500">
-                    <button onClick={() => handleLikeComment(comment.id)} className="flex items-center gap-1.5 hover:text-[#00a85a] transition">
-                      <ThumbsUp size={14} /> {comment.likes}
+                    <button onClick={() => handleLikeComment(comment.id)} className={`flex items-center gap-1.5 transition ${likedComments[comment.id] ? 'text-[#00a85a]' : 'hover:text-[#00a85a]'}`}>
+                      <ThumbsUp size={14} className={likedComments[comment.id] ? 'fill-current' : ''} /> {comment.likes}
                     </button>
-                    <button className="hover:text-[#111111] transition">Reply</button>
+                    <button onClick={() => handleReply(comment.name)} className="hover:text-[#111111] transition">Reply</button>
                   </div>
                 </div>
               ))}
@@ -315,24 +414,7 @@ export default function ArticleView({ slug }: { slug: string }) {
                  <span className="w-2 h-2 bg-[#00a85a] mr-2"></span> Top Headlines
                </h3>
                <div className="space-y-8">
-                  <a href="/" className="flex flex-col gap-3 group">
-                    <div className="w-full h-32 bg-gray-200 flex-shrink-0 border-b-[4px] border-[#00a85a]">
-                      <img src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=300&q=80" className="w-full h-full object-cover group-hover:opacity-80 transition" alt="thumbnail" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-black uppercase text-[#00a85a] mb-1 tracking-widest">World</p>
-                      <h4 className="text-sm font-bold text-gray-900 group-hover:text-[#00a85a] transition leading-snug">Global Summit Agrees on New Climate Action Framework for 2026</h4>
-                    </div>
-                  </a>
-                  <a href="/" className="flex flex-col gap-3 group">
-                    <div className="w-full h-32 bg-gray-200 flex-shrink-0 border-b-[4px] border-[#00a85a]">
-                      <img src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=300&q=80" className="w-full h-full object-cover group-hover:opacity-80 transition" alt="thumbnail" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-black uppercase text-[#00a85a] mb-1 tracking-widest">Business</p>
-                      <h4 className="text-sm font-bold text-gray-900 group-hover:text-[#00a85a] transition leading-snug">Central Bank Announces Unexpected Interest Rate Cut</h4>
-                    </div>
-                  </a>
+                  <RecentArticles excludeId={article.id} />
                </div>
              </div>
            </div>
