@@ -11,14 +11,7 @@ import { Facebook, Linkedin, Instagram, Twitter, Search, Menu, X, ArrowUp } from
 import { useScrollHeader } from './hooks/useScrollHeader';
 
 export default function App() {
-  const [route, setRoute] = useState(() => {
-    if (window.location.hash.startsWith('#/')) {
-      const cleanRoute = window.location.hash.replace('#', '');
-      window.history.replaceState({}, '', cleanRoute);
-      return cleanRoute;
-    }
-    return window.location.pathname || "/";
-  });
+  const [route, setRoute] = useState(window.location.pathname || "/");
   const [searchQuery, setSearchQuery] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAppLoading, setIsAppLoading] = useState(true);
@@ -33,13 +26,7 @@ export default function App() {
   useEffect(() => {
     const timer = setTimeout(() => setIsAppLoading(false), 2000);
     const onPopState = () => {
-      if (window.location.hash.startsWith('#/')) {
-        const cleanRoute = window.location.hash.replace('#', '');
-        window.history.replaceState({}, '', cleanRoute);
-        setRoute(cleanRoute);
-      } else {
-        setRoute(window.location.pathname || "/");
-      }
+      setRoute(window.location.pathname || "/");
     };
     window.addEventListener("popstate", onPopState);
 
@@ -50,7 +37,7 @@ export default function App() {
       if (a && a.href && a.href.startsWith(window.location.origin) && !a.getAttribute('target') && !a.getAttribute('download')) {
         const url = new URL(a.href);
         // Skip interception for purely in-page anchor links
-        if (url.pathname === window.location.pathname && url.hash && !url.hash.startsWith('#/')) {
+        if (url.pathname === window.location.pathname && url.hash) {
           return;
         }
         e.preventDefault();
