@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { Article } from "../types";
 import { getArticles } from "../lib/db";
 
-export default function Home({ searchQuery, categoryQuery }: { searchQuery?: string, categoryQuery?: string }) {
+const createSlug = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+export default function Home({ searchQuery, categoryQuery, isSlug }: { searchQuery?: string, categoryQuery?: string, isSlug?: boolean }) {
   const [articles, setArticles] = useState<Article[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeChip, setActiveChip] = useState('All News');
@@ -25,17 +27,84 @@ export default function Home({ searchQuery, categoryQuery }: { searchQuery?: str
       }
       if (categoryQuery) {
         const q = categoryQuery.toLowerCase();
-        allArticles = allArticles.filter(a => a.category.toLowerCase().trim() === q.trim() || a.category.toLowerCase().includes(q));
+        allArticles = allArticles.filter(a => {
+          if (isSlug) {
+             return createSlug(a.category) === q;
+          }
+          return a.category.toLowerCase().trim() === q.trim() || a.category.toLowerCase().includes(q);
+        });
       }
       setArticles(allArticles);
       setIsLoading(false);
     })();
     return () => { isMounted = false; };
-  }, [searchQuery, categoryQuery]);
+  }, [searchQuery, categoryQuery, isSlug]);
 
   if (isLoading) return (
-    <div className="p-20 text-center">
-      <p className="text-gray-500 font-sans font-bold text-lg animate-pulse">Loading news...</p>
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      {/* Scrollable Chip Filter Skeleton */}
+      {!searchQuery && !categoryQuery && (
+        <div className="flex overflow-x-auto gap-3 pb-2 mb-8 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          {chips.map((chip, index) => (
+            <div 
+              key={index}
+              className="bg-gray-100 border border-gray-100 text-transparent select-none px-4 py-2 rounded-full text-[11px] font-black uppercase tracking-widest animate-pulse"
+            >
+              {chip}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {searchQuery && (
+        <div className="h-8 w-64 bg-gray-200 rounded animate-pulse mb-8"></div>
+      )}
+      {categoryQuery && (
+        <div className="h-10 w-80 bg-gray-200 rounded animate-pulse mb-8"></div>
+      )}
+      
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 border-t-[4px] border-gray-100 pt-8 mt-2">
+        {/* Main Feed Skeleton */}
+        <div className="lg:col-span-9 space-y-12">
+          {[1, 2].map((sectionIndex) => (
+            <div key={sectionIndex} className="mb-12">
+              <div className="h-6 w-38 bg-gray-200 rounded mb-8 animate-pulse"></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3].map((cardIndex) => (
+                  <div key={cardIndex} className="flex flex-col h-full space-y-3">
+                    <div className="aspect-[16/9] w-full bg-gray-200 border-b-[4px] border-gray-100 animate-pulse"></div>
+                    <div className="h-5 bg-gray-200 rounded w-5/6 animate-pulse"></div>
+                    <div className="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
+                    <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse"></div>
+                    <div className="h-3 bg-gray-200 rounded w-2/5 animate-pulse mt-auto pt-2"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Trending Sidebar Skeleton */}
+        <aside className="lg:col-span-3 border-t lg:border-t-0 lg:border-l border-gray-200 pt-10 lg:pt-0 pl-0 lg:pl-10">
+          <div className="sticky top-10">
+            <div className="h-6 w-40 bg-gray-200 rounded mb-8 animate-pulse"></div>
+            <div className="flex flex-col space-y-8">
+              {[1, 2, 3, 4, 5].map((index) => (
+                <div key={index} className="flex gap-4">
+                  <span className="text-4xl font-display font-black text-gray-100 leading-none select-none">
+                    {index}
+                  </span>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 w-16 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="h-4 w-5/6 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="h-4 w-2/3 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </aside>
+      </div>
     </div>
   );
 
@@ -108,14 +177,14 @@ export default function Home({ searchQuery, categoryQuery }: { searchQuery?: str
           {Object.entries(categorizedArticles).map(([category, categoryArticles]) => (
             <div key={category} className="mb-12">
                {(!categoryQuery && !searchQuery) && (
-                 <a href={`/category/${category.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} className="flex items-center text-xs font-black uppercase tracking-widest border-b-[4px] border-[#111111] pb-2 mb-8 text-[#111111] hover:text-[#00a85a] transition group">
+                 <a href={`/${createSlug(category)}`} className="flex items-center text-xs font-black uppercase tracking-widest border-b-[4px] border-[#111111] pb-2 mb-8 text-[#111111] hover:text-[#00a85a] transition group">
                    <span className="w-2 h-2 bg-[#00a85a] mr-2 group-hover:bg-[#111111] transition"></span> {category}
                  </a>
                )}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {categoryArticles.map(article => (
                   <div key={article.id} className="group flex flex-col h-full">
-                    <a href={`/post/${article.slug}`} className="block flex-grow">
+                    <a href={`/${createSlug(article.category)}/${article.slug}`} className="block flex-grow">
                       <div className="aspect-[16/9] overflow-hidden bg-gray-100 mb-3 border-b-[4px] border-[#00a85a] relative">
                         {article.coverImage && (
                           <img src={article.coverImage} className="w-full h-full object-cover group-hover:scale-105 transition duration-700" alt={article.title} loading="lazy" />
@@ -152,7 +221,7 @@ export default function Home({ searchQuery, categoryQuery }: { searchQuery?: str
                   </span>
                   <div>
                     <p className="text-[10px] font-black uppercase text-[#00a85a] mb-1 tracking-widest">{article.category}</p>
-                    <a href={`/post/${article.slug}`}>
+                    <a href={`/${createSlug(article.category)}/${article.slug}`}>
                       <h4 className="text-sm font-bold text-[#111111] group-hover:text-[#00a85a] transition leading-snug">
                         {article.title}
                       </h4>

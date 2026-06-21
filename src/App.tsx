@@ -16,6 +16,11 @@ export default function App() {
   const [isAppLoading, setIsAppLoading] = useState(true);
   
   const isScrolled = useScrollHeader(40);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsAppLoading(false), 2000);
+    return () => clearTimeout(timer);
+  }, []);
   const showBackToTop = useScrollHeader(400);
 
   const scrollToTop = () => {
@@ -23,7 +28,6 @@ export default function App() {
   };
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsAppLoading(false), 2000);
     const onPopState = () => setRoute(window.location.pathname || "/");
     window.addEventListener("popstate", onPopState);
 
@@ -48,7 +52,6 @@ export default function App() {
     return () => {
       window.removeEventListener("popstate", onPopState);
       window.removeEventListener("click", onNavigate);
-      clearTimeout(timer);
     };
   }, []);
 
@@ -71,50 +74,17 @@ export default function App() {
     }
   };
 
-  if (isAppLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex flex-col pt-32 px-4 max-w-7xl mx-auto space-y-12">
-        <div className="w-full flex justify-between items-center mb-12">
-          <div className="h-10 w-48 bg-gray-200 rounded animate-pulse"></div>
-          <div className="h-4 w-64 bg-gray-200 rounded animate-pulse hidden md:block"></div>
-        </div>
-        <div className="w-full h-96 bg-gray-200 rounded animate-pulse mb-8"></div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <div className="h-64 bg-gray-200 rounded animate-pulse"></div>
-          <div className="h-64 bg-gray-200 rounded animate-pulse"></div>
-          <div className="h-64 bg-gray-200 rounded animate-pulse"></div>
-        </div>
-      </div>
-    );
-  }
-
   let content;
   let pageTitle = "GistWire - Always First with the News";
   
-  if (route.startsWith("/post/")) {
-    const slug = route.replace("/post/", "");
-    content = <ArticleView slug={slug} />;
-  } else if (route.startsWith("/search/")) {
+  const createSlug = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  
+  const parts = route.split('/').filter(Boolean);
+  
+  if (route.startsWith("/search/")) {
     const query = decodeURIComponent(route.replace("/search/", ""));
     pageTitle = `Search Results for "${query}" - GistWire`;
     content = <Home searchQuery={query} />;
-  } else if (route.startsWith("/category/")) {
-    const slug = route.replace("/category/", "");
-    const map: Record<string, string> = {
-      "celebrity-news": "Celebrity News",
-      "music": "Music",
-      "education": "Education",
-      "health": "Health",
-      "food-lifestyle": "Food & Lifestyle",
-      "technology": "Technology",
-      "business": "Business",
-      "entertainment": "Entertainment",
-      "sport": "Sport",
-      "global": "Global"
-    };
-    const cat = map[slug] || decodeURIComponent(slug);
-    pageTitle = `${cat} News - GistWire`;
-    content = <Home categoryQuery={cat} />;
   } else if (route === "/write") {
     pageTitle = "Admin Control Panel - GistWire";
     content = <Editor />;
@@ -127,32 +97,133 @@ export default function App() {
   } else if (route === "/download-logo") {
     pageTitle = "Download Logo - GistWire";
     content = <DownloadLogo />;
+  } else if (parts.length === 2 && parts[0] !== 'search') {
+    // Article URL: /category-slug/article-slug
+    const slug = parts[1];
+    content = <ArticleView slug={slug} />;
+  } else if (parts.length === 1 && parts[0] !== 'search') {
+    // Category URL: /category-slug
+    const catSlug = parts[0];
+    pageTitle = `${catSlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} News - GistWire`; // Dynamic fallback title
+    content = <Home categoryQuery={catSlug} isSlug={true} />;
   } else {
+    // Home router (parts.length === 0)
     content = <Home />;
   }
+
+  useEffect(() => {
+    document.title = pageTitle;
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (!metaDesc) {
+      metaDesc = document.createElement('meta');
+      metaDesc.setAttribute('name', 'description');
+      document.head.appendChild(metaDesc);
+    }
+    metaDesc.setAttribute('content', `${pageTitle} - Your premium source for up-to-the-minute updates, celebrity gists, and unfiltered news from across the nation to the global stage.`);
+  }, [pageTitle]);
 
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
   const navLinks = [
     { name: "Home", href: "/" },
-    { name: "Celebrity News", href: "/category/celebrity-news" },
-    { name: "Music", href: "/category/music" },
-    { name: "Education", href: "/category/education" },
-    { name: "Health", href: "/category/health" },
-    { name: "Food & Lifestyle", href: "/category/food-lifestyle" },
-    { name: "Technology", href: "/category/technology" },
-    { name: "Business", href: "/category/business" },
-    { name: "Entertainment", href: "/category/entertainment" },
-    { name: "Sport", href: "/category/sport" },
-    { name: "Global", href: "/category/global" }
+    { name: "Celebrity News", href: "/celebrity-news" },
+    { name: "Music", href: "/music" },
+    { name: "Education", href: "/education" },
+    { name: "Health", href: "/health" },
+    { name: "Food & Lifestyle", href: "/food-lifestyle" },
+    { name: "Technology", href: "/technology" },
+    { name: "Business", href: "/business" },
+    { name: "Entertainment", href: "/entertainment" },
+    { name: "Sport", href: "/sport" },
+    { name: "Global", href: "/global" }
   ];
+
+  if (isAppLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+        {/* Mock Top Header bar */}
+        <div className="overflow-hidden bg-[#0a0a0a]">
+          <div className="text-white px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-center md:text-left flex justify-between items-center max-w-7xl mx-auto w-full">
+            <div className="h-3 w-32 bg-gray-800 rounded animate-pulse"></div>
+            <div className="hidden md:flex gap-4 items-center">
+              <div className="h-3 w-4 bg-gray-800 rounded animate-pulse"></div>
+              <div className="h-3 w-4 bg-gray-800 rounded animate-pulse"></div>
+              <div className="h-3 w-4 bg-gray-800 rounded animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mock Main Header with Logo area */}
+        <div className="bg-white border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 py-4 md:py-5 flex items-center justify-between">
+            <div className="h-10 w-44 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-10 w-72 bg-gray-100 rounded-full animate-pulse hidden lg:block"></div>
+          </div>
+        </div>
+
+        {/* Mock Category Bar */}
+        <div className="bg-white border-b border-gray-200 py-3 hidden lg:block">
+          <div className="max-w-7xl mx-auto px-4 flex gap-6">
+            <div className="h-4 w-12 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-4 w-28 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-4 w-16 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-4 w-20 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-4 w-16 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+        </div>
+
+        {/* Main Content Area Grid Skeleton */}
+        <main className="flex-grow max-w-7xl w-full mx-auto px-4 py-8 space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left/Middle Column (Feature content) */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="w-full h-[400px] bg-gray-200 rounded-lg animate-pulse"></div>
+              <div className="space-y-3">
+                <div className="h-8 bg-gray-200 rounded w-2/3 animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-5/6 animate-pulse"></div>
+              </div>
+            </div>
+
+            {/* Right Side Column (Recommended / Latest sidebar) */}
+            <div className="space-y-6">
+              <div className="h-6 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+              <div className="space-y-5">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="flex gap-4 items-center">
+                    <div className="w-20 h-20 bg-gray-200 rounded animate-pulse flex-shrink-0"></div>
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-gray-200 rounded w-5/6 animate-pulse"></div>
+                      <div className="h-3 bg-gray-200 rounded w-2/3 animate-pulse"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Under grid row of sub cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-8 border-t border-gray-200">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="space-y-3">
+                <div className="w-full h-48 bg-gray-200 rounded-lg animate-pulse"></div>
+                <div className="h-5 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
+              </div>
+            ))}
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col font-sans bg-gray-50">
       <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-[100]">
         {/* Top Header auto-collapses on scroll */}
-        <div className={`transition-all duration-300 ease-in-out grid ${isScrolled ? 'grid-rows-[0fr] opacity-0' : 'grid-rows-[1fr] opacity-100'}`}>
-          <div className="overflow-hidden bg-[#0a0a0a]">
+        <div className={`transition-all duration-0 ease-in-out overflow-hidden transform-gpu [backface-visibility:hidden] ${isScrolled ? 'max-h-0 opacity-0' : 'max-h-10 opacity-100'}`}>
+          <div className="bg-[#0a0a0a]">
             <div className="text-white px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-center md:text-left flex justify-between items-center max-w-7xl mx-auto w-full">
               <span>{today}</span>
               <div className="hidden md:flex gap-4 items-center">
@@ -166,7 +237,7 @@ export default function App() {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 relative z-20 bg-white">
-          <div className={`flex items-center justify-between transition-all duration-300 ease-in-out ${isScrolled ? 'py-3' : 'py-5 md:py-6'}`}>
+          <div className={`flex items-center justify-between transition-all duration-0 ease-in-out [backface-visibility:hidden] ${isScrolled ? 'py-2' : 'py-4 md:py-5'}`}>
             
             {/* Mobile Menu Toggle (Left on Mobile) */}
             <div className="lg:hidden flex items-center">
@@ -175,8 +246,8 @@ export default function App() {
               </button>
             </div>
 
-            {/* Logo with scale transform (Center on mobile, Left on desktop) */}
-            <a href="/" className={`transform md:origin-left inline-block transition-transform duration-300 ease-in-out ${isScrolled ? 'scale-90 md:scale-100' : 'scale-110 md:scale-125'}`}>
+            {/* Logo in header stays a constant size and does not shrink on scroll */}
+            <a href="/" className="inline-block transform-gpu [backface-visibility:hidden]">
               <Logo />
             </a>
 

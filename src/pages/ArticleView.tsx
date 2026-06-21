@@ -3,6 +3,8 @@ import { Article } from "../types";
 import { getArticleBySlug, getComments, saveComment, likeComment, CommentType, incrementViews, getArticles } from "../lib/db";
 import { MessageCircle, ThumbsUp, Facebook, Twitter, MessageCircle as WhatsApp, Link as LinkIcon } from "lucide-react";
 
+const createSlug = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
 function RecentArticles({ excludeId, category, limit = 3, inline = false }: { excludeId: string, category?: string, limit?: number, inline?: boolean }) {
   const [articles, setArticles] = useState<Article[]>([]);
   useEffect(() => {
@@ -23,7 +25,7 @@ function RecentArticles({ excludeId, category, limit = 3, inline = false }: { ex
   return (
     <>
       {articles.map(article => (
-        <a key={article.id} href={`/post/${article.slug}`} className={`flex flex-col gap-3 group ${inline ? 'h-full' : ''}`}>
+        <a key={article.id} href={`/${createSlug(article.category)}/${article.slug}`} className={`flex flex-col gap-3 group ${inline ? 'h-full' : ''}`}>
           <div className={`w-full bg-gray-200 flex-shrink-0 border-b-[4px] border-[#00a85a] ${inline ? 'h-40' : 'h-32'}`}>
             {article.coverImage ? (
               <img src={article.coverImage} className="w-full h-full object-cover group-hover:opacity-80 transition" alt="thumbnail" loading="lazy" />
@@ -67,12 +69,30 @@ export default function ArticleView({ slug }: { slug: string }) {
       setArticle(found || null);
       if (found) {
         getComments(found.id).then(setComments);
-        const storedLikedArticles = JSON.parse(localStorage.getItem('likedArticles') || '{}');
-        setHasLikedArticle(!!storedLikedArticles[found.id]);
-        
-        const storedLikedComments = JSON.parse(localStorage.getItem('likedComments') || '{}');
-        setLikedComments(storedLikedComments);
         incrementViews(slug);
+        
+        // SEO Meta updates
+        document.title = `${found.title} - GistWire`;
+        let metaDesc = document.querySelector('meta[name="description"]');
+        if (!metaDesc) {
+          metaDesc = document.createElement('meta');
+          metaDesc.setAttribute('name', 'description');
+          document.head.appendChild(metaDesc);
+        }
+        metaDesc.setAttribute('content', found.excerpt || found.title);
+
+        const setMetaTag = (property: string, content: string) => {
+          let meta = document.querySelector(`meta[property="${property}"]`);
+          if (!meta) {
+            meta = document.createElement('meta');
+            meta.setAttribute('property', property);
+            document.head.appendChild(meta);
+          }
+          meta.setAttribute('content', content);
+        };
+        setMetaTag('og:title', found.title);
+        setMetaTag('og:description', found.excerpt || '');
+        if (found.coverImage) setMetaTag('og:image', found.coverImage);
       }
       setLoading(false);
     });
@@ -132,25 +152,8 @@ export default function ArticleView({ slug }: { slug: string }) {
     const isLiking = !hasLikedArticle;
     setHasLikedArticle(isLiking);
     setArticle({...article, likes: (article.likes || 0) + (isLiking ? 1 : -1)});
-    
-    const storedLikedArticles = JSON.parse(localStorage.getItem('likedArticles') || '{}');
-    if (isLiking) storedLikedArticles[article.id] = true;
-    else delete storedLikedArticles[article.id];
-    localStorage.setItem('likedArticles', JSON.stringify(storedLikedArticles));
 
     import("../lib/db").then(m => m.likeArticle(article.slug, isLiking));
-  };
-
-  const handleLikeComment = async (commentId: string) => {
-    if (!article) return;
-    const isLiking = !likedComments[commentId];
-    setLikedComments(prev => {
-      const next = {...prev, [commentId]: isLiking};
-      localStorage.setItem('likedComments', JSON.stringify(next));
-      return next;
-    });
-    setComments(comments.map(c => c.id === commentId ? { ...c, likes: c.likes + (isLiking ? 1 : -1) } : c));
-    await likeComment(commentId, isLiking);
   };
 
   const shareUrl = window.location.href;
@@ -161,7 +164,8 @@ export default function ArticleView({ slug }: { slug: string }) {
   const handleReply = (name: string) => {
     setNewCommentText(`@${name} `);
     textareaRef.current?.focus();
-    document.getElementById("comment-form")?.scrollIntoView({ behavior: "smooth" });
+    // Using standard HTML id hash navigation or JS, remove the smooth behavior explicitly to avoid shaking if css already has smooth scroll
+    document.getElementById("comment-form")?.scrollIntoView();
   };
 
   const handleCopyLink = () => {
@@ -171,16 +175,64 @@ export default function ArticleView({ slug }: { slug: string }) {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-8 lg:py-12 animate-pulse">
-        <div className="h-10 bg-gray-200 rounded w-1/4 mb-4"></div>
-        <div className="h-20 bg-gray-200 rounded w-3/4 mb-8"></div>
-        <div className="h-64 bg-gray-200 rounded w-full mb-8"></div>
-        <div className="space-y-4">
-          <div className="h-4 bg-gray-200 rounded w-full"></div>
-          <div className="h-4 bg-gray-200 rounded w-full"></div>
-          <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+      <article className="max-w-7xl mx-auto px-4 py-8 lg:py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          
+          {/* Social Share Sidebar Placeholder */}
+          <div className="hidden lg:flex lg:col-span-1 flex-col items-center gap-4 pt-4 border-r border-gray-200">
+            <div className="h-12 w-4 bg-gray-200 rounded animate-pulse mb-2"></div>
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="w-10 h-10 rounded-full bg-gray-200 animate-pulse" />
+            ))}
+          </div>
+
+          {/* Main Content Skeleton Area */}
+          <div className="lg:col-span-8 space-y-6">
+            <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-10 w-full bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-10 w-4/5 bg-gray-200 rounded animate-pulse"></div>
+            
+            {/* Metadata lines */}
+            <div className="flex items-center gap-4 py-4 border-y border-gray-100">
+              <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse"></div>
+              <div className="space-y-2">
+                <div className="h-3 w-32 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-3 w-24 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+            </div>
+
+            {/* Large cover image skeleton */}
+            <div className="w-full aspect-[21/9] bg-gray-200 animate-pulse border-b-[4px] border-gray-100"></div>
+
+            {/* Content paragraph blocks */}
+            <div className="space-y-4 pt-6">
+              <div className="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
+              <div className="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
+              <div className="h-4 bg-gray-200 rounded w-5/6 animate-pulse"></div>
+              <div className="h-4 bg-gray-200 rounded w-full animate-pulse pt-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-11/12 animate-pulse"></div>
+              <div className="h-4 bg-gray-200 rounded w-4/5 animate-pulse"></div>
+            </div>
+          </div>
+
+          {/* Sidebar Area Placeholder */}
+          <div className="lg:col-span-3">
+            <div className="h-6 w-32 bg-gray-200 rounded mb-6 animate-pulse"></div>
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex gap-4">
+                  <div className="w-16 h-16 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="flex-grow space-y-2">
+                    <div className="h-4 w-full bg-gray-200 rounded animate-pulse"></div>
+                    <div className="h-3 w-2/3 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
-      </div>
+      </article>
     );
   }
 
@@ -224,7 +276,7 @@ export default function ArticleView({ slug }: { slug: string }) {
             <div className="mb-8 border-b-4 border-[#111111] pb-6">
               <div className="flex items-center gap-3 mb-4">
                 <span className="w-3 h-3 bg-[#00a85a]"></span>
-                <a href={`/category/${article.category.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} className="text-[#00a85a] font-black uppercase tracking-widest text-xs hover:text-[#00c86b] transition text-nowrap whitespace-nowrap">
+                <a href={`/${createSlug(article.category)}`} className="text-[#00a85a] font-black uppercase tracking-widest text-xs hover:text-[#00c86b] transition text-nowrap whitespace-nowrap">
                   {article.category}
                 </a>
               </div>
@@ -288,7 +340,7 @@ export default function ArticleView({ slug }: { slug: string }) {
                         href={`#${h.id}`} 
                         onClick={(e) => {
                           e.preventDefault();
-                          document.getElementById(h.id)?.scrollIntoView({ behavior: 'smooth' });
+                          document.getElementById(h.id)?.scrollIntoView();
                         }}
                         className="text-gray-600 hover:text-[#00a85a] transition font-medium text-sm"
                      >
@@ -367,9 +419,6 @@ export default function ArticleView({ slug }: { slug: string }) {
                     {comment.text}
                   </p>
                   <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-widest text-gray-500">
-                    <button onClick={() => handleLikeComment(comment.id)} className={`flex items-center gap-1.5 transition ${likedComments[comment.id] ? 'text-[#00a85a]' : 'hover:text-[#00a85a]'}`}>
-                      <ThumbsUp size={14} className={likedComments[comment.id] ? 'fill-current' : ''} /> {comment.likes}
-                    </button>
                     <button onClick={() => handleReply(comment.name)} className="hover:text-[#111111] transition">Reply</button>
                   </div>
                 </div>

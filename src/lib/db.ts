@@ -1,4 +1,6 @@
 import { Article } from "../types";
+import { db } from "./firebase";
+import { collection, doc, getDocs, getDoc, setDoc, query, where, updateDoc, increment, deleteDoc } from "firebase/firestore";
 
 export interface CommentType {
   id: string;
@@ -9,90 +11,83 @@ export interface CommentType {
   likes: number;
 }
 
-const getStoredArticles = (): Article[] => {
-  const data = localStorage.getItem("gistwire_articles");
-  return data ? JSON.parse(data) : [];
-};
-
-const setStoredArticles = (articles: Article[]) => {
-  localStorage.setItem("gistwire_articles", JSON.stringify(articles));
-};
-
-const getStoredComments = (): CommentType[] => {
-  const data = localStorage.getItem("gistwire_comments");
-  return data ? JSON.parse(data) : [];
-};
-
-const setStoredComments = (comments: CommentType[]) => {
-  localStorage.setItem("gistwire_comments", JSON.stringify(comments));
-};
-
 export const getArticles = async (): Promise<Article[]> => {
-  return getStoredArticles();
+  const snapshot = await getDocs(collection(db, "articles"));
+  return snapshot.docs.map(doc => doc.data() as Article);
 };
 
 export const saveArticles = async (articles: Article[]) => {
-  setStoredArticles(articles);
+  for (const article of articles) {
+    await saveArticle(article);
+  }
 };
 
 export const getArticle = async (id: string): Promise<Article | undefined> => {
-  return getStoredArticles().find(a => a.id === id);
+  const docRef = doc(db, "articles", id);
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    return docSnap.data() as Article;
+  }
+  return undefined;
 };
 
 export const saveArticle = async (article: Article) => {
-  let articles = getStoredArticles();
-  const index = articles.findIndex(a => a.id === article.id);
-  if (index > -1) {
-    articles[index] = article;
-  } else {
-    articles.push(article);
-  }
-  setStoredArticles(articles);
+  const docRef = doc(db, "articles", article.id);
+  await setDoc(docRef, article);
 };
 
 export const getArticleBySlug = async (slug: string): Promise<Article | undefined> => {
-  return getStoredArticles().find(a => a.slug === slug);
+  const q = query(collection(db, "articles"), where("slug", "==", slug));
+  const snapshot = await getDocs(q);
+  if (!snapshot.empty) {
+    return snapshot.docs[0].data() as Article;
+  }
+  return undefined;
 };
 
 export const incrementViews = async (slug: string) => {
-  let articles = getStoredArticles();
-  const article = articles.find(a => a.slug === slug);
-  if (article) {
-    article.views = (article.views || 0) + 1;
-    setStoredArticles(articles);
+  const q = query(collection(db, "articles"), where("slug", "==", slug));
+  const snapshot = await getDocs(q);
+  if (!snapshot.empty) {
+    const docRef = snapshot.docs[0].ref;
+    await updateDoc(docRef, {
+      views: increment(1)
+    });
   }
 };
 
 export const likeArticle = async (slug: string, isLiking: boolean = true) => {
-  let articles = getStoredArticles();
-  const article = articles.find(a => a.slug === slug);
-  if (article) {
-    article.likes = (article.likes || 0) + (isLiking ? 1 : -1);
-    setStoredArticles(articles);
+  const q = query(collection(db, "articles"), where("slug", "==", slug));
+  const snapshot = await getDocs(q);
+  if (!snapshot.empty) {
+    const docRef = snapshot.docs[0].ref;
+    await updateDoc(docRef, {
+      likes: increment(isLiking ? 1 : -1)
+    });
   }
 };
 
 export const deleteArticle = async (id: string) => {
-  let articles = getStoredArticles();
-  articles = articles.filter(a => a.id !== id);
-  setStoredArticles(articles);
+  await deleteDoc(doc(db, "articles", id));
 };
 
 export const getComments = async (articleId: string): Promise<CommentType[]> => {
-  return getStoredComments().filter(c => c.articleId === articleId);
+  const q = query(collection(db, "comments"), where("articleId", "==", articleId));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => doc.data() as CommentType).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 };
 
 export const saveComment = async (comment: CommentType) => {
-  let comments = getStoredComments();
-  comments.push(comment);
-  setStoredComments(comments);
+  const docRef = doc(db, "comments", comment.id);
+  await setDoc(docRef, comment);
 };
 
 export const likeComment = async (commentId: string, isLiking: boolean = true) => {
-  let comments = getStoredComments();
-  const comment = comments.find(c => c.id === commentId);
-  if (comment) {
-    comment.likes = (comment.likes || 0) + (isLiking ? 1 : -1);
-    setStoredComments(comments);
+  const docRef = doc(db, "comments", commentId);
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    await updateDoc(docRef, {
+      likes: increment(isLiking ? 1 : -1)
+    });
   }
 };

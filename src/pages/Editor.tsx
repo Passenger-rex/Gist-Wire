@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { Article } from "../types";
 import { saveArticles, getArticles, deleteArticle } from "../lib/db";
-import EditorWysiwyg from 'react-simple-wysiwyg';
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 export default function Editor() {
   const [isAuth, setIsAuth] = useState(true);
   const [userEmail, setUserEmail] = useState<string | null>("admin@gistwire.com");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [userEditedSlug, setUserEditedSlug] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
+    slug: "",
     category: "News",
-    format: "Standard Article",
     excerpt: "",
     author: "Staff Reporter",
     coverImage: "",
@@ -23,6 +25,12 @@ export default function Editor() {
   useEffect(() => {
     getArticles().then(setArticles);
   }, []);
+
+  useEffect(() => {
+    if (!userEditedSlug && !editingId && formData.title) {
+       setFormData(prev => ({...prev, slug: prev.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}));
+    }
+  }, [formData.title, userEditedSlug, editingId]);
 
   useEffect(() => {
     if (formData.coverImage && !formData.imageSource) {
@@ -56,10 +64,9 @@ export default function Editor() {
 
     const newArticle: Article = {
       id: editingId || Date.now().toString(),
-      slug: formData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+      slug: formData.slug || formData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
       title: formData.title,
       category: formData.category,
-      format: formData.format,
       excerpt: formData.excerpt,
       author: formData.author,
       contentHtml: formData.contentHtml,
@@ -73,33 +80,16 @@ export default function Editor() {
     setArticles(await getArticles());
     alert(editingId ? "Article Updated Successfully!" : "Article Published Successfully!");
     setEditingId(null);
-    setFormData({ title: "", category: "News", format: "Standard Article", excerpt: "", author: "Staff Reporter", coverImage: "", imageSource: "", contentHtml: "<p>Start writing the next report...</p>" });
-  };
-
-  const handleFormatChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newFormat = e.target.value;
-    let newContent = formData.contentHtml;
-
-    // Change template depending on the format selected only if it hasn't been heavily edited
-    // or we are switching to a completely new template
-    if (newFormat === "Listicle") {
-      newContent = "<h2>Introduction</h2><p>Write your introduction here...</p><h2>1. First Item</h2><p>First item details...</p><h2>2. Second Item</h2><p>Second item details...</p>";
-    } else if (newFormat === "Feature Story") {
-      newContent = "<h2>The Beginning</h2><p>Write an engaging opening...</p><h2>Deep Dive</h2><p>Provide comprehensive details...</p><h2>Conclusion</h2><p>Wrap up the story...</p>";
-    } else if (newFormat === "Opinion/Editorial") {
-      newContent = "<h2>My Perspective</h2><p>State your main argument...</p><blockquote><p>A key provocative quote here...</p></blockquote><p>Further analysis...</p>";
-    } else {
-      newContent = "<h2>Executive Summary</h2><p>Provide a brief overview...</p><h2>Key Details</h2><p>Expand on the facts...</p>";
-    }
-
-    setFormData({ ...formData, format: newFormat, contentHtml: newContent });
+    setUserEditedSlug(false);
+    setFormData({ title: "", slug: "", category: "News", excerpt: "", author: "Staff Reporter", coverImage: "", imageSource: "", contentHtml: "<p>Start writing the next report...</p>" });
   };
 
   const handleEdit = (a: Article) => {
+    setUserEditedSlug(true);
     setFormData({
       title: a.title,
+      slug: a.slug,
       category: a.category,
-      format: a.format,
       excerpt: a.excerpt || "",
       author: a.author || "Staff Reporter",
       coverImage: a.coverImage || "",
@@ -140,7 +130,7 @@ export default function Editor() {
                <p className="text-gray-400 font-sans text-xs uppercase tracking-widest mt-1">Admin Portal / {userEmail} <button onClick={handleLogout} className="underline text-blue-500 ml-2 cursor-pointer">Logout</button></p>
              </div>
              {editingId && (
-                <button type="button" onClick={() => { setEditingId(null); setFormData({ title: "", category: "News", format: "Standard Article", excerpt: "", author: "Staff Reporter", coverImage: "", imageSource: "", contentHtml: "<p>Start writing the next report...</p>" }); }} className="text-xs font-black uppercase tracking-widest text-gray-500 hover:text-[#111111] transition bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full">
+                <button type="button" onClick={() => { setEditingId(null); setUserEditedSlug(false); setFormData({ title: "", slug: "", category: "News", excerpt: "", author: "Staff Reporter", coverImage: "", imageSource: "", contentHtml: "<p>Start writing the next report...</p>" }); }} className="text-xs font-black uppercase tracking-widest text-gray-500 hover:text-[#111111] transition bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full">
                   Cancel Edit
                 </button>
              )}
@@ -159,6 +149,21 @@ export default function Editor() {
               />
             </div>
             
+            {/* Slug */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">URL Slug</label>
+              <input 
+                className="w-full text-sm font-mono border border-gray-300 rounded-lg p-3 text-gray-600 focus:ring-2 focus:ring-[#00a85a] focus:border-transparent outline-none transition shadow-sm" 
+                placeholder="auto-generated-slug" 
+                value={formData.slug} 
+                onChange={e => {
+                  setUserEditedSlug(true);
+                  setFormData({...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9\-]+/g, '-')});
+                }} 
+                required 
+              />
+            </div>
+            
             {/* Excerpt */}
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Excerpt / Subheadline</label>
@@ -173,20 +178,23 @@ export default function Editor() {
             </div>
 
             {/* WYSIWYG Editor */}
-            <div>
+            <div className="mb-8">
               <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Article Body</label>
-              <div className="border border-gray-300 rounded-lg overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-[#00a85a] transition">
-                <EditorWysiwyg 
-                  containerProps={{ 
-                    style: { 
-                      minHeight: '500px', 
-                      backgroundColor: '#fff',
-                      padding: '16px',
-                      fontFamily: 'system-ui, -apple-system, sans-serif'
-                    } 
-                  }} 
+              <div className="bg-white border border-gray-300 rounded-lg overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-[#00a85a] transition">
+                <ReactQuill 
+                  theme="snow"
                   value={formData.contentHtml} 
-                  onChange={(e: any) => setFormData({...formData, contentHtml: e.target.value})} 
+                  onChange={(val) => setFormData({...formData, contentHtml: val})}
+                  modules={{
+                    toolbar: [
+                      [{ 'header': [2, 3, false] }],
+                      ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+                      [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
+                      ['link', 'image'],
+                      ['clean']
+                    ],
+                  }}
+                  className="h-[500px] mb-12"
                 />
               </div>
             </div>
@@ -232,16 +240,6 @@ export default function Editor() {
                     <option value="Make Money">Make Money</option>
                     <option value="Scholarships">Scholarships</option>
                     <option value="Spiritual">Spiritual</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-xs uppercase tracking-widest text-gray-500 mb-2">Format</label>
-                  <select className="w-full bg-white border border-gray-200 rounded-lg p-3 text-sm font-bold text-[#111111] outline-none focus:border-[#00a85a] focus:ring-1 focus:ring-[#00a85a] transition" value={formData.format} onChange={handleFormatChange}>
-                    <option value="Standard Article">Standard Post</option>
-                    <option value="Listicle">Listicle</option>
-                    <option value="Feature Story">Feature Story</option>
-                    <option value="Opinion/Editorial">Opinion</option>
                   </select>
                 </div>
 
