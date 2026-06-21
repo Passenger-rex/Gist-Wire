@@ -6,6 +6,9 @@ import { getArticles } from "../lib/db";
 export default function Home({ searchQuery, categoryQuery }: { searchQuery?: string, categoryQuery?: string }) {
   const [articles, setArticles] = useState<Article[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeChip, setActiveChip] = useState('All News');
+
+  const chips = ['All News', 'Trending', 'Breaking', "Editor's Pick", 'Politics', 'Business', 'Sports', 'Health', 'World', 'Local'];
 
   useEffect(() => {
     let isMounted = true;
@@ -48,9 +51,22 @@ export default function Home({ searchQuery, categoryQuery }: { searchQuery?: str
     </div>
   );
 
+  let displayedArticles = articles;
+  if (activeChip !== 'All News') {
+    if (activeChip === 'Trending') {
+      displayedArticles = [...articles].sort((a, b) => (b.views || 0) - (a.views || 0));
+    } else if (activeChip === 'Breaking') {
+       displayedArticles = [...articles].sort((a, b) => new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime()).slice(0, 8);
+    } else if (activeChip === "Editor's Pick") {
+       displayedArticles = [...articles].sort((a, b) => a.title.length - b.title.length).slice(0, 6); // Mock filter
+    } else {
+       displayedArticles = articles.filter(a => a.category.toLowerCase() === activeChip.toLowerCase());
+    }
+  }
+
   // Group articles by category
   const categorizedArticles: Record<string, Article[]> = {};
-  articles.forEach(article => {
+  displayedArticles.forEach(article => {
     if (!categorizedArticles[article.category]) {
       categorizedArticles[article.category] = [];
     }
@@ -61,6 +77,25 @@ export default function Home({ searchQuery, categoryQuery }: { searchQuery?: str
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
+      {/* Scrollable Chip Filter */}
+      {!searchQuery && !categoryQuery && (
+        <div className="flex overflow-x-auto gap-3 pb-2 mb-8 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          {chips.map(chip => (
+            <button 
+              key={chip}
+              onClick={() => setActiveChip(chip)}
+              className={`whitespace-nowrap px-4 py-2 rounded-full text-[11px] font-black uppercase tracking-widest transition-colors border ${
+                activeChip === chip 
+                  ? 'bg-[#111111] text-white border-[#111111]' 
+                  : 'bg-white text-gray-700 border-gray-200 hover:border-[#00a85a] hover:text-[#00a85a]'
+              }`}
+            >
+              {chip}
+            </button>
+          ))}
+        </div>
+      )}
+
       {searchQuery && (
         <h2 className="text-2xl font-black uppercase tracking-tighter text-[#111111] mb-8 border-l-[6px] border-[#00a85a] pl-4">
           Search Results: <span className="text-[#00a85a]">"{searchQuery}"</span>

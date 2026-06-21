@@ -9,7 +9,12 @@ export function useScrollHeader(threshold = 40) {
     
     // A debounced fallback is included to catch edge cases where rapid scrolling might skip a frame update
     const updateScroll = () => {
-      setIsScrolled(window.scrollY > threshold);
+      setIsScrolled((prev) => {
+        // Hysteresis logic to prevent bouncing/shaking
+        if (!prev && window.scrollY > threshold + 30) return true;
+        if (prev && window.scrollY <= threshold) return false;
+        return prev;
+      });
     };
 
     const handleScroll = () => {
