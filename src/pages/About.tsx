@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import Logo from "../components/Logo";
+import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react";
 
 export default function About() {
   return (
@@ -32,6 +33,78 @@ export default function About() {
           <p className="text-gray-600 leading-relaxed">
             We believe in power of information. Our team of dedicated editors and journalists work around the clock to bring you narratives that shape our world, honoring the truth and prioritizing our readers' need to stay informed.
           </p>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-12 mt-16 pt-16 border-t border-gray-200">
+        <div>
+          <h2 className="text-2xl font-black uppercase tracking-widest text-[#111111] mb-8">Connect With Us</h2>
+          <div className="flex flex-col gap-4">
+             <a href="/" className="flex items-center gap-4 group">
+               <div className="w-12 h-12 rounded-full bg-[#111111] flex items-center justify-center text-white group-hover:bg-[#1877F2] transition">
+                 <Facebook size={20} />
+               </div>
+               <span className="font-bold text-gray-700 group-hover:text-[#1877F2] transition uppercase tracking-widest text-sm">GistWire News</span>
+             </a>
+             <a href="/" className="flex items-center gap-4 group">
+               <div className="w-12 h-12 rounded-full bg-[#111111] flex items-center justify-center text-white group-hover:bg-[#1DA1F2] transition">
+                 <Twitter size={20} />
+               </div>
+               <span className="font-bold text-gray-700 group-hover:text-[#1DA1F2] transition uppercase tracking-widest text-sm">@GistWireMedia</span>
+             </a>
+             <a href="/" className="flex items-center gap-4 group">
+               <div className="w-12 h-12 rounded-full bg-[#111111] flex items-center justify-center text-white group-hover:bg-[#E1306C] transition">
+                 <Instagram size={20} />
+               </div>
+               <span className="font-bold text-gray-700 group-hover:text-[#E1306C] transition uppercase tracking-widest text-sm">@gistwire.official</span>
+             </a>
+             <a href="/" className="flex items-center gap-4 group">
+               <div className="w-12 h-12 rounded-full bg-[#111111] flex items-center justify-center text-white group-hover:bg-[#0077b5] transition">
+                 <Linkedin size={20} />
+               </div>
+               <span className="font-bold text-gray-700 group-hover:text-[#0077b5] transition uppercase tracking-widest text-sm">GistWire Publishing</span>
+             </a>
+          </div>
+        </div>
+
+        <div>
+          <h2 className="text-2xl font-black uppercase tracking-widest text-[#111111] mb-8">Quick Contacts</h2>
+          <div className="space-y-6">
+            <div className="flex items-start gap-4">
+              <div className="text-[#00a85a] mt-1">
+                <Mail size={24} />
+              </div>
+              <div>
+                <h3 className="font-bold uppercase tracking-widest text-sm text-[#111111]">Email Addresses</h3>
+                <p className="text-gray-500 font-medium text-sm mt-1">news@gistwire.com (Editorial)</p>
+                <p className="text-gray-500 font-medium text-sm">tips@gistwire.com (Tips)</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-4">
+              <div className="text-[#00a85a] mt-1">
+                <Phone size={24} />
+              </div>
+              <div>
+                <h3 className="font-bold uppercase tracking-widest text-sm text-[#111111]">Phone Line</h3>
+                <p className="text-gray-500 font-medium text-sm mt-1">+234 (0) 800 GIST WIRE</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-4">
+              <div className="text-[#00a85a] mt-1">
+                <MapPin size={24} />
+              </div>
+              <div>
+                <h3 className="font-bold uppercase tracking-widest text-sm text-[#111111]">Headquarters</h3>
+                <p className="text-gray-500 font-medium text-sm mt-1 leading-relaxed">
+                  GistWire Media Building,<br />
+                  Victoria Island,<br />
+                  Lagos, Nigeria.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

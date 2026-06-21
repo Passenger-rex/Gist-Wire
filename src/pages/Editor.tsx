@@ -145,12 +145,13 @@ export default function Editor() {
              )}
           </div>
 
-          <form id="editor-form" onSubmit={handleSave} className="space-y-8">
+          <form id="editor-form" onSubmit={handleSave} className="space-y-6">
             {/* Title / Headline */}
             <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Article Title / Headline</label>
               <input 
-                className="w-full text-5xl md:text-6xl font-black font-sans text-[#111111] placeholder-gray-300 outline-none resize-none leading-tight tracking-tighter" 
-                placeholder="Headline..." 
+                className="w-full text-lg border border-gray-300 rounded-lg p-4 text-[#111111] focus:ring-2 focus:ring-[#00a85a] focus:border-transparent outline-none transition shadow-sm" 
+                placeholder="Enter a compelling headline..." 
                 value={formData.title} 
                 onChange={e => setFormData({...formData, title: e.target.value})} 
                 required 
@@ -159,36 +160,34 @@ export default function Editor() {
             
             {/* Excerpt */}
             <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Excerpt / Subheadline</label>
               <textarea 
-                className="w-full text-xl md:text-2xl font-serif font-medium text-gray-600 placeholder-gray-300 outline-none resize-none leading-relaxed" 
+                className="w-full text-base border border-gray-300 rounded-lg p-4 text-gray-600 focus:ring-2 focus:ring-[#00a85a] focus:border-transparent outline-none transition shadow-sm resize-y" 
                 placeholder="Write a brief excerpt or subheadline..." 
                 value={formData.excerpt} 
                 onChange={e => setFormData({...formData, excerpt: e.target.value})} 
                 required 
-                rows={2}
+                rows={3}
               />
             </div>
 
             {/* WYSIWYG Editor */}
-            <div className="prose prose-lg md:prose-xl max-w-none 
-              prose-headings:font-black prose-headings:text-[#111111] 
-              prose-p:leading-relaxed prose-p:text-gray-800 
-              prose-a:text-[#00a85a] prose-a:underline hover:prose-a:text-[#00c86b]
-              prose-blockquote:border-l-[6px] prose-blockquote:border-[#00a85a] prose-blockquote:bg-gray-50 prose-blockquote:p-6 prose-blockquote:text-lg prose-blockquote:font-black prose-blockquote:text-[#111111]
-              prose-img:border-b-[4px] prose-img:border-[#00a85a]">
-              <EditorWysiwyg 
-                containerProps={{ 
-                  style: { 
-                    minHeight: '600px', 
-                    border: 'none', 
-                    padding: '0', 
-                    backgroundColor: 'transparent',
-                    fontFamily: 'system-ui, -apple-system, sans-serif'
-                  } 
-                }} 
-                value={formData.contentHtml} 
-                onChange={(e: any) => setFormData({...formData, contentHtml: e.target.value})} 
-              />
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Article Body</label>
+              <div className="border border-gray-300 rounded-lg overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-[#00a85a] transition">
+                <EditorWysiwyg 
+                  containerProps={{ 
+                    style: { 
+                      minHeight: '500px', 
+                      backgroundColor: '#fff',
+                      padding: '16px',
+                      fontFamily: 'system-ui, -apple-system, sans-serif'
+                    } 
+                  }} 
+                  value={formData.contentHtml} 
+                  onChange={(e: any) => setFormData({...formData, contentHtml: e.target.value})} 
+                />
+              </div>
             </div>
           </form>
         </div>

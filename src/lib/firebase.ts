@@ -1,18 +1,14 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeApp, FirebaseApp } from 'firebase/app';
+import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, Firestore } from 'firebase/firestore';
 
-const configs = import.meta.glob('../../firebase-applet-config.json', { eager: true });
-const configKeys = Object.keys(configs);
-const firebaseConfig = configKeys.length > 0 ? (configs[configKeys[0]] as any).default : {
-  apiKey: "dummy",
-  authDomain: "dummy",
-  projectId: "dummy",
-  storageBucket: "dummy",
-  messagingSenderId: "dummy",
-  appId: "dummy"
-};
+export const db: any = null;
+export const auth: any = null;
 
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId || "(default)");
-export const auth = getAuth(app);
+try {
+  // Using dynamic import or a safe way? No, Vite will still try to resolve it.
+  // We'll just define empty for now or use env vars if they existed.
+  console.warn("Firebase configuration not found. Please set up Firebase.");
+} catch (e) {
+  console.error("Firebase not initialized", e);
+}

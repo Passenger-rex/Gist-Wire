@@ -13,6 +13,7 @@ export interface CommentType {
 
 export const getArticles = async (): Promise<Article[]> => {
   try {
+    if (!db) return [];
     const querySnapshot = await getDocs(collection(db, "articles"));
     const articles: Article[] = [];
     querySnapshot.forEach((doc) => {

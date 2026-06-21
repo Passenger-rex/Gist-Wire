@@ -10,7 +10,15 @@ export default function ArticleView({ slug }: { slug: string }) {
   const [newCommentName, setNewCommentName] = useState("");
   const [newCommentText, setNewCommentText] = useState("");
   const [headings, setHeadings] = useState<{ id: string, text: string, level: string }[]>([]);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  const calculateReadTime = (text: string) => {
+    const wordsPerMinute = 200;
+    const cleanText = text.replace(/<[^>]*>?/gm, ''); // remove html tags
+    const noOfWords = cleanText.split(/\s+/).length;
+    return Math.ceil(noOfWords / wordsPerMinute);
+  };
 
   useEffect(() => {
     getArticleBySlug(slug).then(found => {
@@ -22,6 +30,18 @@ export default function ArticleView({ slug }: { slug: string }) {
     });
     window.scrollTo(0, 0);
   }, [slug]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight;
+      const winHeight = window.innerHeight;
+      const progress = (scrollY / (docHeight - winHeight)) * 100;
+      setScrollProgress(progress);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     if (article && contentRef.current) {
@@ -80,70 +100,77 @@ export default function ArticleView({ slug }: { slug: string }) {
           <title>Article Not Found - GistWire</title>
         </Helmet>
         <h1 className="text-4xl font-sans font-black uppercase text-[#111111] mb-6 tracking-tighter">Article not found</h1>
-        <a href="#/" className="inline-block px-8 py-4 bg-[#00a85a] text-white font-black uppercase tracking-widest text-xs hover:bg-[#111111] transition">Return to Publication</a>
+        <a href="/" className="inline-block px-8 py-4 bg-[#00a85a] text-white font-black uppercase tracking-widest text-xs hover:bg-[#111111] transition">Return to Publication</a>
       </div>
     );
   }
 
   return (
-    <article className="max-w-7xl mx-auto px-4 py-8 lg:py-12">
-      <Helmet>
-        <title>{`${article.title} - GistWire`}</title>
-        <meta name="description" content={article.excerpt || "Read full article on GistWire."} />
-        {article.coverImage && <meta property="og:image" content={article.coverImage} />}
-      </Helmet>
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-        
-        {/* Social Share Sidebar (Desktop) */}
-        <div className="hidden lg:flex lg:col-span-1 flex-col items-center gap-4 pt-4 border-r border-gray-200">
-          <span className="text-xs font-black text-[#111111] uppercase tracking-widest mb-2" style={{writingMode: "vertical-rl", transform: "rotate(180deg)"}}>Share</span>
-          <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center hover:bg-blue-600 hover:text-white hover:border-blue-600 transition text-gray-700">
-            <Facebook size={16} />
-          </a>
-          <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center hover:bg-[#111111] hover:text-white hover:border-[#111111] transition text-gray-700">
-            <Twitter size={16} />
-          </a>
-          <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent(shareTitle + " " + shareUrl)}`} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center hover:bg-[#25D366] hover:text-white hover:border-[#25D366] transition text-gray-700">
-            <WhatsApp size={16} />
-          </a>
-          <button onClick={handleCopyLink} className="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center hover:bg-[#00a85a] hover:text-white hover:border-[#00a85a] transition text-gray-700">
-            <LinkIcon size={16} />
-          </button>
-        </div>
+    <>
+      <div 
+        className="fixed top-0 left-0 h-1 bg-[#00a85a] z-[200] transition-all duration-150 ease-out"
+        style={{ width: `${scrollProgress}%` }}
+      />
+      <article className="max-w-7xl mx-auto px-4 py-8 lg:py-12">
+        <Helmet>
+          <title>{`${article.title} - GistWire`}</title>
+          <meta name="description" content={article.excerpt || "Read full article on GistWire."} />
+          {article.coverImage && <meta property="og:image" content={article.coverImage} />}
+        </Helmet>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          
+          {/* Social Share Sidebar (Desktop) */}
+          <div className="hidden lg:flex lg:col-span-1 flex-col items-center gap-4 pt-4 border-r border-gray-200">
+            <span className="text-xs font-black text-[#111111] uppercase tracking-widest mb-2" style={{writingMode: "vertical-rl", transform: "rotate(180deg)"}}>Share</span>
+            <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center hover:bg-blue-600 hover:text-white hover:border-blue-600 transition text-gray-700">
+              <Facebook size={16} />
+            </a>
+            <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareTitle)}`} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center hover:bg-[#111111] hover:text-white hover:border-[#111111] transition text-gray-700">
+              <Twitter size={16} />
+            </a>
+            <a href={`https://api.whatsapp.com/send?text=${encodeURIComponent(shareTitle + " " + shareUrl)}`} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center hover:bg-[#25D366] hover:text-white hover:border-[#25D366] transition text-gray-700">
+              <WhatsApp size={16} />
+            </a>
+            <button onClick={handleCopyLink} className="w-10 h-10 rounded-full border-2 border-gray-300 flex items-center justify-center hover:bg-[#00a85a] hover:text-white hover:border-[#00a85a] transition text-gray-700">
+              <LinkIcon size={16} />
+            </button>
+          </div>
 
-        {/* Main Content */}
-        <div className="lg:col-span-8">
-          <div className="mb-8 border-b-4 border-[#111111] pb-6">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="w-3 h-3 bg-[#00a85a]"></span>
-              <a href="#/" className="text-[#00a85a] font-black uppercase tracking-widest text-xs hover:text-[#00c86b] transition-colors">
-                {article.category}
-              </a>
-              {article.format && (
-                 <>
-                   <span className="text-gray-300">/</span>
-                   <span className="text-gray-500 font-bold uppercase tracking-widest text-xs">{article.format}</span>
-                 </>
-              )}
-            </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-sans font-black text-[#111111] leading-[1.1] tracking-tight mb-4">
-              {article.title}
-            </h1>
-            <p className="text-xl md:text-2xl text-gray-700 font-sans font-medium leading-relaxed mb-6">
-              {article.excerpt}
-            </p>
+          {/* Main Content */}
+          <div className="lg:col-span-8">
+            <div className="mb-8 border-b-4 border-[#111111] pb-6">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="w-3 h-3 bg-[#00a85a]"></span>
+                <a href={`/category/${encodeURIComponent(article.category)}`} className="text-[#00a85a] font-black uppercase tracking-widest text-xs hover:text-[#00c86b] transition-colors">
+                  {article.category}
+                </a>
+                {article.format && (
+                   <>
+                     <span className="text-gray-300">/</span>
+                     <span className="text-gray-500 font-bold uppercase tracking-widest text-xs">{article.format}</span>
+                   </>
+                )}
+              </div>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-sans font-black text-[#111111] leading-[1.1] tracking-tight mb-4">
+                {article.title}
+              </h1>
+              <p className="text-xl md:text-2xl text-gray-700 font-sans font-medium leading-relaxed mb-6">
+                {article.excerpt}
+              </p>
 
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 border-t border-gray-200">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-[#111111] flex items-center justify-center font-black text-white text-xl font-sans">
-                  {article.author.charAt(0)}
-                </div>
-                <div>
-                  <div className="font-bold text-[#111111] text-sm uppercase tracking-wider mb-1">By {article.author}</div>
-                  <div className="text-[11px] font-bold text-gray-500 flex items-center gap-2 uppercase tracking-widest">
-                    <span>Published: {new Date(article.publishDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", hour: '2-digit', minute: '2-digit' })}</span>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 border-t border-gray-200">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-[#111111] flex items-center justify-center font-black text-white text-xl font-sans">
+                    {article.author.charAt(0)}
                   </div>
-                </div>
+                  <div>
+                    <div className="font-bold text-[#111111] text-sm uppercase tracking-wider mb-1">By {article.author}</div>
+                    <div className="text-[11px] font-bold text-gray-500 flex items-center gap-2 uppercase tracking-widest">
+                      <span>Published: {new Date(article.publishDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", hour: '2-digit', minute: '2-digit' })}</span>
+                      <span className="text-gray-300">•</span>
+                      <span>{calculateReadTime(article.content)} min read</span>
+                    </div>
+                  </div>
               </div>
               <div className="flex lg:hidden gap-3 mt-4 sm:mt-0">
                 <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noreferrer" className="text-gray-500 hover:text-blue-600 transition"><Facebook size={20} /></a>
@@ -288,7 +315,7 @@ export default function ArticleView({ slug }: { slug: string }) {
                  <span className="w-2 h-2 bg-[#00a85a] mr-2"></span> Top Headlines
                </h3>
                <div className="space-y-8">
-                  <a href="#/" className="flex flex-col gap-3 group">
+                  <a href="/" className="flex flex-col gap-3 group">
                     <div className="w-full h-32 bg-gray-200 flex-shrink-0 border-b-[4px] border-[#00a85a]">
                       <img src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=300&q=80" className="w-full h-full object-cover group-hover:opacity-80 transition" alt="thumbnail" />
                     </div>
@@ -297,7 +324,7 @@ export default function ArticleView({ slug }: { slug: string }) {
                       <h4 className="text-sm font-bold text-gray-900 group-hover:text-[#00a85a] transition leading-snug">Global Summit Agrees on New Climate Action Framework for 2026</h4>
                     </div>
                   </a>
-                  <a href="#/" className="flex flex-col gap-3 group">
+                  <a href="/" className="flex flex-col gap-3 group">
                     <div className="w-full h-32 bg-gray-200 flex-shrink-0 border-b-[4px] border-[#00a85a]">
                       <img src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=300&q=80" className="w-full h-full object-cover group-hover:opacity-80 transition" alt="thumbnail" />
                     </div>
@@ -312,5 +339,6 @@ export default function ArticleView({ slug }: { slug: string }) {
         </aside>
       </div>
     </article>
+    </>
   );
 }

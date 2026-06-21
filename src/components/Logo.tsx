@@ -1,10 +1,12 @@
 import React from 'react';
 
 export default function Logo({ className = "", lightText = false }: { className?: string, lightText?: boolean }) {
+  // If light text on dark background is requested, we apply a brightness filter
   return (
-    <div className={`font-sans font-black text-4xl tracking-tighter flex items-center gap-2 ${lightText ? 'text-white' : 'text-[#111111]'} ${className}`}>
-      <div className="bg-[#00a85a] text-white px-3 py-1 leading-none rounded-xl shadow-sm -rotate-2 text-3xl">Gist</div>
-      <span className="italic text-3xl">Wire</span>
-    </div>
+    <img 
+      src="/gistwire-logo-removebg-preview.png" 
+      alt="GistWire Logo" 
+      className={`h-14 md:h-16 w-auto object-contain ${lightText ? 'brightness-0 invert' : ''} ${className}`} 
+    />
   );
 }
