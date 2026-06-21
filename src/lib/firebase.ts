@@ -8,8 +8,14 @@ export let auth: Auth | null = null;
 export let app: FirebaseApp | null = null;
 
 try {
-  app = initializeApp(firebaseConfig);
-  db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+  // Override the database ID as requested
+  const finalConfig = {
+    ...firebaseConfig,
+    firestoreDatabaseId: "ai-studio-05d01ffd-36a6-451b-8025-e95bb12af3d3"
+  };
+
+  app = initializeApp(finalConfig);
+  db = getFirestore(app, finalConfig.firestoreDatabaseId);
   auth = getAuth(app);
 } catch (e) {
   console.error("Firebase not initialized", e);
