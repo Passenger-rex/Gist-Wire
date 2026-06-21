@@ -126,117 +126,178 @@ export default function Editor() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-12">
-      
-      <div className="mb-12 flex flex-col md:flex-row justify-between items-start md:items-center bg-gray-50 border-b-[4px] border-[#111111] p-6 md:p-8 gap-6 shadow-sm">
-        <div className="md:w-1/3">
-          <h2 className="font-sans font-black text-2xl uppercase tracking-tighter text-[#111111] mb-2">CMS Content Manager</h2>
-          <p className="text-gray-500 font-sans font-medium text-sm">Admin portal for publishing database entries</p>
-        </div>
-        <div className="flex flex-col gap-2 max-h-48 overflow-y-auto w-full md:w-2/3 border border-gray-200 bg-white">
-          {articles.map(a => (
-            <div key={a.id} className="flex items-center justify-between gap-4 text-xs bg-white px-4 py-3 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition">
-               <div className="flex items-center gap-3 overflow-hidden">
-                 <span className="bg-[#00a85a] text-white px-2 py-1 font-bold uppercase tracking-wider text-[9px] min-w-[70px] text-center shrink-0">{a.category}</span>
-                 <span className="font-bold truncate text-[#111111] text-sm" title={a.title}>{a.title}</span>
-               </div>
-               <div className="flex items-center shrink-0">
-                 <button className="text-[#111111] font-black uppercase hover:bg-gray-100 px-3 py-2 transition text-[10px] tracking-widest border-2 border-transparent" onClick={() => handleEdit(a)}>Edit</button>
-                 <button className="text-[#00a85a] font-black uppercase hover:bg-red-50 px-3 py-2 transition text-[10px] tracking-widest border-2 border-transparent hover:border-red-200" onClick={async () => { await deleteArticle(a.id); setArticles(await getArticles()); }}>Delete</button>
-               </div>
-            </div>
-          ))}
-          {articles.length === 0 && <div className="p-4 text-sm text-gray-500 font-sans font-medium text-center">No articles published. database empty.</div>}
-        </div>
-      </div>
-
-      <form onSubmit={handleSave} className="bg-white p-6 md:p-10 border border-gray-200 shadow-sm">
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-10 pb-6 border-b-[4px] border-[#111111] gap-4">
-          <h1 className="text-3xl font-sans font-black uppercase tracking-tighter text-[#111111]">{editingId ? "Edit News Alert" : "New News Alert"}</h1>
-          <div className="flex items-center gap-2">
-            {editingId && (
-              <button type="button" onClick={() => { setEditingId(null); setFormData({ title: "", category: "News", format: "Standard Article", excerpt: "", author: "Staff Reporter", coverImage: "", contentHtml: "<p>Start writing the next report...</p>" }); }} className="bg-gray-200 text-[#111111] px-8 py-3.5 font-black uppercase tracking-widest text-[11px] hover:bg-gray-300 transition w-full sm:w-auto">Cancel</button>
-            )}
-            <button type="submit" className="bg-[#00a85a] text-white px-8 py-3.5 font-black uppercase tracking-widest text-[11px] hover:bg-[#111111] transition w-full sm:w-auto">{editingId ? "Update Alert" : "Publish Alert"}</button>
-          </div>
-        </div>
+    <div className="min-h-screen bg-white">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-12">
         
-        <div className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="md:col-span-4">
-              <label className="block font-black text-[11px] uppercase tracking-widest text-[#111111] mb-2">Headline</label>
-              <input className="w-full text-2xl font-bold font-sans border-b-[3px] border-gray-200 bg-gray-50 p-4 outline-none focus:border-[#00a85a] focus:bg-white transition" placeholder="e.g., Major Policy Overhaul Announced" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} required />
-            </div>
-            <div className="md:col-span-2">
-              <label className="block font-black text-[11px] uppercase tracking-widest text-[#111111] mb-2">Article Type / Format</label>
-              <select className="w-full border-b-[3px] border-gray-200 bg-gray-50 p-4 text-base outline-none focus:border-[#00a85a] font-bold text-[#111111] focus:bg-white transition" value={formData.format} onChange={handleFormatChange}>
-                <option value="Standard Article">Standard Post</option>
-                <option value="Listicle">Listicle</option>
-                <option value="Feature Story">Feature Story</option>
-                <option value="Opinion/Editorial">Opinion</option>
-              </select>
-            </div>
-            <div className="md:col-span-2">
-              <label className="block font-black text-[11px] uppercase tracking-widest text-[#111111] mb-2">Section Category</label>
-              <select className="w-full border-b-[3px] border-gray-200 bg-gray-50 p-4 text-base outline-none focus:border-[#00a85a] font-bold text-[#111111] focus:bg-white transition" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
-                <option value="Celebrity News">Celebrity News</option>
-                <option value="Music">Music</option>
-                <option value="News">News</option>
-                <option value="Education">Education</option>
-                <option value="Health">Health</option>
-                <option value="Food & Lifestyle">Food & Lifestyle</option>
-                <option value="Technology">Technology</option>
-                <option value="Economy">Economy</option>
-                <option value="Business">Business</option>
-                <option value="Entertainment">Entertainment</option>
-                <option value="Sport">Sport</option>
-                <option value="Global">Global</option>
-                <option value="Finance">Finance</option>
-                <option value="War">War</option>
-                <option value="Travel">Travel</option>
-                <option value="Lifestyle">Lifestyle</option>
-                <option value="Fashion">Fashion</option>
-                <option value="Movies">Movies</option>
-                <option value="Trending">Trending</option>
-                <option value="AI">AI</option>
-                <option value="Software">Software</option>
-                <option value="Digital">Digital</option>
-                <option value="Make Money">Make Money</option>
-                <option value="Scholarships">Scholarships</option>
-                <option value="Spiritual">Spiritual</option>
-              </select>
-            </div>
+        {/* Left Column - Main Editor */}
+        <div className="flex-1 max-w-4xl">
+          <div className="mb-10 flex items-center justify-between border-b pb-4">
+             <div className="flex flex-col">
+               <h1 className="text-xl font-sans font-black uppercase tracking-widest text-[#111111]">
+                 {editingId ? "Editing Article" : "Write a New Article"}
+               </h1>
+               <p className="text-gray-400 font-sans text-xs uppercase tracking-widest mt-1">Admin Portal / GistWire CMS</p>
+             </div>
+             {editingId && (
+                <button type="button" onClick={() => { setEditingId(null); setFormData({ title: "", category: "News", format: "Standard Article", excerpt: "", author: "Staff Reporter", coverImage: "", contentHtml: "<p>Start writing the next report...</p>" }); }} className="text-xs font-black uppercase tracking-widest text-gray-500 hover:text-[#111111] transition bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full">
+                  Cancel Edit
+                </button>
+             )}
           </div>
-          
-          <div>
-            <label className="block font-black text-[11px] uppercase tracking-widest text-[#111111] mb-2">Subheadline / Executive Summary</label>
-            <textarea className="w-full text-base font-sans font-medium text-gray-700 border border-gray-300 bg-white p-4 outline-none focus:border-[#00a85a] focus:ring-1 focus:ring-[#00a85a] h-28 resize-none transition" placeholder="A brief, engaging summary of the news story..." value={formData.excerpt} onChange={e => setFormData({...formData, excerpt: e.target.value})} required />
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-gray-100">
+
+          <form id="editor-form" onSubmit={handleSave} className="space-y-8">
+            {/* Title / Headline */}
             <div>
-              <label className="block font-black text-[11px] uppercase tracking-widest text-[#111111] mb-2">Reporter / Author</label>
-              <input className="w-full border border-gray-300 p-3.5 text-sm outline-none focus:border-[#00a85a] font-bold text-gray-800 transition" value={formData.author} onChange={e => setFormData({...formData, author: e.target.value})} required />
+              <input 
+                className="w-full text-5xl md:text-6xl font-black font-sans text-[#111111] placeholder-gray-300 outline-none resize-none leading-tight tracking-tighter" 
+                placeholder="Headline..." 
+                value={formData.title} 
+                onChange={e => setFormData({...formData, title: e.target.value})} 
+                required 
+              />
             </div>
+            
+            {/* Excerpt */}
             <div>
-              <label className="block font-black text-[11px] uppercase tracking-widest text-[#111111] mb-2">Cover Image URL</label>
-              <input className="w-full border border-gray-300 p-3.5 text-sm outline-none focus:border-[#00a85a] text-gray-800 transition font-mono" placeholder="https://..." value={formData.coverImage} onChange={e => setFormData({...formData, coverImage: e.target.value})} />
+              <textarea 
+                className="w-full text-xl md:text-2xl font-serif font-medium text-gray-600 placeholder-gray-300 outline-none resize-none leading-relaxed" 
+                placeholder="Write a brief excerpt or subheadline..." 
+                value={formData.excerpt} 
+                onChange={e => setFormData({...formData, excerpt: e.target.value})} 
+                required 
+                rows={2}
+              />
             </div>
-          </div>
-          
-          <div>
-            <label className="block font-black text-[11px] uppercase tracking-widest text-[#111111] mb-4">Article Body</label>
-            <div className="prose max-w-none">
+
+            {/* WYSIWYG Editor */}
+            <div className="prose prose-lg md:prose-xl max-w-none 
+              prose-headings:font-black prose-headings:text-[#111111] 
+              prose-p:leading-relaxed prose-p:text-gray-800 
+              prose-a:text-[#00a85a] prose-a:underline hover:prose-a:text-[#00c86b]
+              prose-blockquote:border-l-[6px] prose-blockquote:border-[#00a85a] prose-blockquote:bg-gray-50 prose-blockquote:p-6 prose-blockquote:text-lg prose-blockquote:font-black prose-blockquote:text-[#111111]
+              prose-img:border-b-[4px] prose-img:border-[#00a85a]">
               <EditorWysiwyg 
-                containerProps={{ style: { minHeight: '500px', border: '1px solid #d1d5db', padding: '1rem', backgroundColor: '#ffffff', borderRadius: '4px', fontFamily: 'sans-serif' } }} 
+                containerProps={{ 
+                  style: { 
+                    minHeight: '600px', 
+                    border: 'none', 
+                    padding: '0', 
+                    backgroundColor: 'transparent',
+                    fontFamily: 'system-ui, -apple-system, sans-serif'
+                  } 
+                }} 
                 value={formData.contentHtml} 
                 onChange={(e: any) => setFormData({...formData, contentHtml: e.target.value})} 
               />
             </div>
-            <p className="text-xs text-gray-500 mt-3 font-sans italic">Use the visual editor to construct paragraphs, headings, and lists. Tip: Use HTML tools in the editor to add in-text links and multiple images inside the article body.</p>
-          </div>
+          </form>
         </div>
-      </form>
+
+        {/* Right Column - Publish Settings & Content Manager */}
+        <aside className="w-full lg:w-[400px] shrink-0 border-t lg:border-t-0 lg:border-l border-gray-100 pt-10 lg:pt-0 lg:pl-10">
+          <div className="sticky top-8 space-y-10">
+            
+            {/* Publish Action Box */}
+            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 shadow-sm">
+              <h3 className="font-black text-sm uppercase tracking-widest text-[#111111] mb-6 flex items-center">
+                <span className="w-2 h-2 bg-[#00a85a] rounded-full mr-3"></span> Publish Settings
+              </h3>
+              
+              <div className="space-y-5">
+                <div>
+                  <label className="block font-bold text-xs uppercase tracking-widest text-gray-500 mb-2">Category</label>
+                  <select className="w-full bg-white border border-gray-200 rounded-lg p-3 text-sm font-bold text-[#111111] outline-none focus:border-[#00a85a] focus:ring-1 focus:ring-[#00a85a] transition" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}>
+                    <option value="News">News</option>
+                    <option value="Celebrity News">Celebrity News</option>
+                    <option value="Music">Music</option>
+                    <option value="Education">Education</option>
+                    <option value="Health">Health</option>
+                    <option value="Food & Lifestyle">Food & Lifestyle</option>
+                    <option value="Technology">Technology</option>
+                    <option value="Economy">Economy</option>
+                    <option value="Business">Business</option>
+                    <option value="Entertainment">Entertainment</option>
+                    <option value="Sport">Sport</option>
+                    <option value="Global">Global</option>
+                    <option value="Finance">Finance</option>
+                    <option value="War">War</option>
+                    <option value="Travel">Travel</option>
+                    <option value="Lifestyle">Lifestyle</option>
+                    <option value="Fashion">Fashion</option>
+                    <option value="Movies">Movies</option>
+                    <option value="Trending">Trending</option>
+                    <option value="AI">AI</option>
+                    <option value="Software">Software</option>
+                    <option value="Digital">Digital</option>
+                    <option value="Make Money">Make Money</option>
+                    <option value="Scholarships">Scholarships</option>
+                    <option value="Spiritual">Spiritual</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-xs uppercase tracking-widest text-gray-500 mb-2">Format</label>
+                  <select className="w-full bg-white border border-gray-200 rounded-lg p-3 text-sm font-bold text-[#111111] outline-none focus:border-[#00a85a] focus:ring-1 focus:ring-[#00a85a] transition" value={formData.format} onChange={handleFormatChange}>
+                    <option value="Standard Article">Standard Post</option>
+                    <option value="Listicle">Listicle</option>
+                    <option value="Feature Story">Feature Story</option>
+                    <option value="Opinion/Editorial">Opinion</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-xs uppercase tracking-widest text-gray-500 mb-2">Reporter / Author</label>
+                  <input className="w-full bg-white border border-gray-200 rounded-lg p-3 text-sm font-bold text-[#111111] outline-none focus:border-[#00a85a] focus:ring-1 focus:ring-[#00a85a] transition" value={formData.author} onChange={e => setFormData({...formData, author: e.target.value})} required form="editor-form" />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-xs uppercase tracking-widest text-gray-500 mb-2">Cover Image URL</label>
+                  <input className="w-full bg-white border border-gray-200 rounded-lg p-3 text-sm font-mono text-[#111111] outline-none focus:border-[#00a85a] focus:ring-1 focus:ring-[#00a85a] transition" placeholder="https://..." value={formData.coverImage} onChange={e => setFormData({...formData, coverImage: e.target.value})} form="editor-form" />
+                  {formData.coverImage && (
+                    <div className="mt-3 rounded-lg overflow-hidden border border-gray-200 bg-white">
+                      <img src={formData.coverImage} alt="Cover Preview" className="w-full h-32 object-cover" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-gray-200">
+                <button type="submit" form="editor-form" className="w-full bg-[#00a85a] text-white py-4 rounded-xl font-black uppercase tracking-widest text-xs hover:bg-[#111111] hover:-translate-y-1 hover:shadow-xl transition-all transform duration-200">
+                  {editingId ? "Update Published Article" : "Publish to World"}
+                </button>
+              </div>
+            </div>
+
+            {/* Published Articles List */}
+            <div className="border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+               <div className="bg-white px-6 py-4 border-b border-gray-200">
+                 <h3 className="font-black text-sm uppercase tracking-widest text-[#111111]">Manage Content</h3>
+                 <p className="text-xs text-gray-500 mt-1 font-medium">{articles.length} Published Articles</p>
+               </div>
+               <div className="bg-gray-50 max-h-80 overflow-y-auto w-full divide-y divide-gray-200">
+                {articles.map(a => (
+                  <div key={a.id} className="group p-4 hover:bg-white transition relative">
+                     <div className="pr-16">
+                       <span className="inline-block px-2 text-[10px] font-bold uppercase tracking-wider bg-gray-200 text-gray-700 rounded-full mb-2">{a.category}</span>
+                       <h4 className="font-bold text-sm text-[#111111] leading-snug line-clamp-2" title={a.title}>{a.title}</h4>
+                     </div>
+                     <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                       <button className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition shadow-sm" title="Edit" onClick={() => handleEdit(a)}>
+                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                       </button>
+                       <button className="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white transition shadow-sm" title="Delete" onClick={async () => { if(window.confirm('Delete article?')) { await deleteArticle(a.id); setArticles(await getArticles()); } }}>
+                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                       </button>
+                     </div>
+                  </div>
+                ))}
+                {articles.length === 0 && <div className="p-8 text-sm text-gray-500 font-sans font-medium text-center bg-white">No content yet.</div>}
+              </div>
+            </div>
+
+          </div>
+        </aside>
+      </div>
     </div>
   );
 }
