@@ -11,7 +11,13 @@ import { Facebook, Linkedin, Instagram, Twitter, Search, Menu, X, ArrowUp } from
 import { useScrollHeader } from './hooks/useScrollHeader';
 
 export default function App() {
-  const [route, setRoute] = useState(window.location.pathname || "/");
+  const [route, setRoute] = useState(() => {
+    let current = window.location.pathname || "/";
+    if (current.length > 1 && current.endsWith('/')) {
+      current = current.slice(0, -1);
+    }
+    return current;
+  });
   const [searchQuery, setSearchQuery] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAppLoading, setIsAppLoading] = useState(true);
@@ -26,7 +32,11 @@ export default function App() {
   useEffect(() => {
     const timer = setTimeout(() => setIsAppLoading(false), 2000);
     const onPopState = () => {
-      setRoute(window.location.pathname || "/");
+      let current = window.location.pathname || "/";
+      if (current.length > 1 && current.endsWith('/')) {
+        current = current.slice(0, -1);
+      }
+      setRoute(current);
     };
     window.addEventListener("popstate", onPopState);
 
@@ -47,8 +57,15 @@ export default function App() {
           return;
         }
         e.preventDefault();
-        window.history.pushState({}, '', url.pathname + url.search);
-        setRoute(url.pathname + url.search);
+        
+        let newPath = url.pathname;
+        if (newPath.length > 1 && newPath.endsWith('/')) {
+          newPath = newPath.slice(0, -1);
+        }
+        const fullPath = newPath + url.search;
+        
+        window.history.pushState({}, '', fullPath);
+        setRoute(fullPath);
         window.scrollTo(0, 0);
       }
     };
@@ -160,8 +177,8 @@ export default function App() {
               <div className="hidden md:flex gap-4 items-center">
                  <a href="https://facebook.com/gistwiree" target="_blank" rel="noopener noreferrer" className="hover:text-[#00a85a] transition" aria-label="Facebook"><Facebook size={12} /></a>
                  <a href="https://x.com/gist_wire" target="_blank" rel="noopener noreferrer" className="hover:text-[#00a85a] transition" aria-label="Twitter"><Twitter size={12} /></a>
-                 <a href="https://instagram.com/gistwire" target="_blank" rel="noopener noreferrer" className="hover:text-[#00a85a] transition" aria-label="Instagram"><Instagram size={12} /></a>
-                 <a href="https://linkedin.com/company/gistwire" target="_blank" rel="noopener noreferrer" className="hover:text-[#00a85a] transition" aria-label="LinkedIn"><Linkedin size={12} /></a>
+                 <a href="https://www.instagram.com/gistwireng" target="_blank" rel="noopener noreferrer" className="hover:text-[#00a85a] transition" aria-label="Instagram"><Instagram size={12} /></a>
+                 <a href="https://www.linkedin.com/company/gistwire" target="_blank" rel="noopener noreferrer" className="hover:text-[#00a85a] transition" aria-label="LinkedIn"><Linkedin size={12} /></a>
               </div>
             </div>
           </div>
@@ -285,8 +302,8 @@ export default function App() {
           <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-start gap-6 text-gray-600 mt-auto shrink-0">
              <a href="https://facebook.com/gistwiree" target="_blank" rel="noopener noreferrer" className="hover:text-[#111111] transition" aria-label="Facebook"><Facebook size={20} /></a>
              <a href="https://x.com/gist_wire" target="_blank" rel="noopener noreferrer" className="hover:text-[#111111] transition" aria-label="Twitter"><Twitter size={20} /></a>
-             <a href="https://instagram.com/gistwire" target="_blank" rel="noopener noreferrer" className="hover:text-[#111111] transition" aria-label="Instagram"><Instagram size={20} /></a>
-             <a href="https://linkedin.com/company/gistwire" target="_blank" rel="noopener noreferrer" className="hover:text-[#111111] transition" aria-label="LinkedIn"><Linkedin size={20} /></a>
+             <a href="https://www.instagram.com/gistwireng" target="_blank" rel="noopener noreferrer" className="hover:text-[#111111] transition" aria-label="Instagram"><Instagram size={20} /></a>
+             <a href="https://www.linkedin.com/company/gistwire" target="_blank" rel="noopener noreferrer" className="hover:text-[#111111] transition" aria-label="LinkedIn"><Linkedin size={20} /></a>
           </div>
         </div>
       </header>
@@ -330,8 +347,8 @@ export default function App() {
              <div className="flex flex-wrap gap-2">
               <a href="https://facebook.com/gistwiree" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-[#222222] flex items-center justify-center hover:bg-[#00a85a] transition text-white" aria-label="Facebook"><Facebook size={14} /></a>
               <a href="https://x.com/gist_wire" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-[#222222] flex items-center justify-center hover:bg-[#00a85a] transition text-white" aria-label="Twitter"><Twitter size={14} /></a>
-              <a href="https://instagram.com/gistwire" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-[#222222] flex items-center justify-center hover:bg-[#00a85a] transition text-white" aria-label="Instagram"><Instagram size={14} /></a>
-              <a href="https://linkedin.com/company/gistwire" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-[#222222] flex items-center justify-center hover:bg-[#00a85a] transition text-white" aria-label="LinkedIn"><Linkedin size={14} /></a>
+              <a href="https://www.instagram.com/gistwireng" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-[#222222] flex items-center justify-center hover:bg-[#00a85a] transition text-white" aria-label="Instagram"><Instagram size={14} /></a>
+              <a href="https://www.linkedin.com/company/gistwire" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-[#222222] flex items-center justify-center hover:bg-[#00a85a] transition text-white" aria-label="LinkedIn"><Linkedin size={14} /></a>
             </div>
           </div>
         </div>

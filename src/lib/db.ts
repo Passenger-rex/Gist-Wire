@@ -13,7 +13,6 @@ export interface CommentType {
 
 export const getArticles = async (): Promise<Article[]> => {
   try {
-    if (!db) return [];
     const querySnapshot = await getDocs(collection(db, "articles"));
     const articles: Article[] = [];
     querySnapshot.forEach((doc) => {
@@ -27,8 +26,6 @@ export const getArticles = async (): Promise<Article[]> => {
 };
 
 export const saveArticles = async (articles: Article[]) => {
-  // This function is less common in Firebase unless batch writing.
-  // Assuming it's meant to save individual new articles or sync an array.
   try {
     for (const article of articles) {
       await setDoc(doc(db, "articles", article.id), article);

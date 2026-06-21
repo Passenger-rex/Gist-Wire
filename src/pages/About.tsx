@@ -52,13 +52,13 @@ export default function About() {
                </div>
                <span className="font-bold text-gray-700 group-hover:text-[#1DA1F2] transition uppercase tracking-widest text-sm">@gist_wire</span>
              </a>
-             <a href="https://instagram.com/gistwire" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 group">
+             <a href="https://www.instagram.com/gistwireng" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 group">
                <div className="w-12 h-12 rounded-full bg-[#111111] flex items-center justify-center text-white group-hover:bg-[#E1306C] transition">
                  <Instagram size={20} />
                </div>
                <span className="font-bold text-gray-700 group-hover:text-[#E1306C] transition uppercase tracking-widest text-sm">@gistwire</span>
              </a>
-             <a href="https://linkedin.com/company/gistwire" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 group">
+             <a href="https://www.linkedin.com/company/gistwire" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 group">
                <div className="w-12 h-12 rounded-full bg-[#111111] flex items-center justify-center text-white group-hover:bg-[#0077b5] transition">
                  <Linkedin size={20} />
                </div>
