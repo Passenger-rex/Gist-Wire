@@ -1,8 +1,60 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin() { return isSignedIn() && request.auth.token.email_verified == true && request.auth.token.email == 'johntobismart@gmail.com'; }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    
+    function isValidArticle(data) {
+      return data.keys().hasAll(['id', 'slug', 'title', 'category', 'format', 'excerpt', 'author', 'contentHtml', 'coverImage', 'publishDate', 'views']) &&
+             data.keys().size() == 11 &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 100 &&
+             data.slug is string && data.slug.size() >= 0 && data.slug.size() <= 200 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 300 &&
+             data.category is string && data.category.size() >= 0 && data.category.size() <= 100 &&
+             data.format is string && data.format.size() >= 0 && data.format.size() <= 100 &&
+             data.excerpt is string && data.excerpt.size() >= 0 && data.excerpt.size() <= 2000 &&
+             data.author is string && data.author.size() > 0 && data.author.size() <= 100 &&
+             data.contentHtml is string && data.contentHtml.size() > 0 &&
+             data.coverImage is string &&
+             data.publishDate is string && data.publishDate.size() > 0 &&
+             data.views is number;
+    }
+    
+    function isValidComment(data) {
+      return data.keys().hasAll(['id', 'articleId', 'name', 'text', 'date', 'likes']) &&
+             data.keys().size() == 6 &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 100 &&
+             data.articleId is string && data.articleId.size() > 0 && data.articleId.size() <= 100 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.text is string && data.text.size() > 0 && data.text.size() <= 5000 &&
+             data.date is string && data.date.size() > 0 &&
+             data.likes is number;
+    }
+
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
+    }
+    
+    match /articles/{articleId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidId(articleId) && isValidArticle(incoming());
+      allow update: if isValidId(articleId) && (
+        (isAdmin() && isValidArticle(incoming())) ||
+        (incoming().diff(existing()).affectedKeys().hasOnly(['views']))
+      );
+      allow delete: if isAdmin() && isValidId(articleId);
+    }
+    
+    match /comments/{commentId} {
+      allow read: if true;
+      allow create: if isValidId(commentId) && isValidComment(incoming());
+      allow update: if isValidId(commentId) && incoming().diff(existing()).affectedKeys().hasOnly(['likes']);
+      allow delete: if isAdmin() && isValidId(commentId);
     }
   }
 }
+

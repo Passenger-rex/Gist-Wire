@@ -40,29 +40,29 @@ export default function About() {
         <div>
           <h2 className="text-2xl font-black uppercase tracking-widest text-[#111111] mb-8">Connect With Us</h2>
           <div className="flex flex-col gap-4">
-             <a href="https://facebook.com/gistwiree" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 group">
+             <a href="/" className="flex items-center gap-4 group">
                <div className="w-12 h-12 rounded-full bg-[#111111] flex items-center justify-center text-white group-hover:bg-[#1877F2] transition">
                  <Facebook size={20} />
                </div>
                <span className="font-bold text-gray-700 group-hover:text-[#1877F2] transition uppercase tracking-widest text-sm">GistWire News</span>
              </a>
-             <a href="https://x.com/gist_wire" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 group">
+             <a href="/" className="flex items-center gap-4 group">
                <div className="w-12 h-12 rounded-full bg-[#111111] flex items-center justify-center text-white group-hover:bg-[#1DA1F2] transition">
                  <Twitter size={20} />
                </div>
-               <span className="font-bold text-gray-700 group-hover:text-[#1DA1F2] transition uppercase tracking-widest text-sm">@gist_wire</span>
+               <span className="font-bold text-gray-700 group-hover:text-[#1DA1F2] transition uppercase tracking-widest text-sm">@GistWireMedia</span>
              </a>
-             <a href="https://www.instagram.com/gistwireng" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 group">
+             <a href="/" className="flex items-center gap-4 group">
                <div className="w-12 h-12 rounded-full bg-[#111111] flex items-center justify-center text-white group-hover:bg-[#E1306C] transition">
                  <Instagram size={20} />
                </div>
-               <span className="font-bold text-gray-700 group-hover:text-[#E1306C] transition uppercase tracking-widest text-sm">@gistwire</span>
+               <span className="font-bold text-gray-700 group-hover:text-[#E1306C] transition uppercase tracking-widest text-sm">@gistwire.official</span>
              </a>
-             <a href="https://www.linkedin.com/company/gistwire" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 group">
+             <a href="/" className="flex items-center gap-4 group">
                <div className="w-12 h-12 rounded-full bg-[#111111] flex items-center justify-center text-white group-hover:bg-[#0077b5] transition">
                  <Linkedin size={20} />
                </div>
-               <span className="font-bold text-gray-700 group-hover:text-[#0077b5] transition uppercase tracking-widest text-sm">GistWire</span>
+               <span className="font-bold text-gray-700 group-hover:text-[#0077b5] transition uppercase tracking-widest text-sm">GistWire Publishing</span>
              </a>
           </div>
         </div>

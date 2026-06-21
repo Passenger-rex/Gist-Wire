@@ -119,7 +119,7 @@ export default function Home({ searchQuery, categoryQuery }: { searchQuery?: str
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {categoryArticles.map(article => (
                   <div key={article.id} className="group flex flex-col h-full">
-                    <a href={`/post/${article.slug}`} className="block flex-grow">
+                    <a href={`#/post/${article.slug}`} className="block flex-grow">
                       <div className="aspect-[16/9] overflow-hidden bg-gray-100 mb-3 border-b-[4px] border-[#00a85a] relative">
                         {article.coverImage && (
                           <img src={article.coverImage} className="w-full h-full object-cover group-hover:scale-105 transition duration-700" alt={article.title} loading="lazy" />
@@ -156,7 +156,7 @@ export default function Home({ searchQuery, categoryQuery }: { searchQuery?: str
                   </span>
                   <div>
                     <p className="text-[10px] font-black uppercase text-[#00a85a] mb-1 tracking-widest">{article.category}</p>
-                    <a href={`/post/${article.slug}`}>
+                    <a href={`#/post/${article.slug}`}>
                       <h4 className="text-sm font-bold text-[#111111] group-hover:text-[#00a85a] transition leading-snug">
                         {article.title}
                       </h4>

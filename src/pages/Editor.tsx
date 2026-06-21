@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Article } from "../types";
 import { saveArticles, getArticles, deleteArticle } from "../lib/db";
+import { auth } from "../lib/firebase";
+import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "firebase/auth";
 import EditorWysiwyg from 'react-simple-wysiwyg';
 
 export default function Editor() {
   const [isAuth, setIsAuth] = useState(false);
-  const [password, setPassword] = useState("");
-  const [email, setEmail] = useState("");
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: "",
@@ -22,15 +23,33 @@ export default function Editor() {
 
   useEffect(() => {
     getArticles().then(setArticles);
+    
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user && user.email === "johntobismart@gmail.com") {
+        setIsAuth(true);
+        setUserEmail(user.email);
+      } else {
+        setIsAuth(false);
+        setUserEmail(null);
+      }
+    });
+    
+    return () => unsubscribe();
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email === "johntobismart@gmail.com" && password === "Toby@2022") {
-      setIsAuth(true);
-    } else {
-      alert("Incorrect email or password");
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error("Error signing in", error);
+      alert("Failed to sign in. Ensure you are using the correct admin account.");
     }
+  };
+  
+  const handleLogout = async () => {
+    await signOut(auth);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -102,23 +121,7 @@ export default function Editor() {
           </div>
           <h2 className="font-sans font-black text-xl uppercase tracking-tighter text-white mb-8">Admin Control Panel</h2>
           <form onSubmit={handleLogin} className="flex flex-col gap-6">
-            <input 
-              type="email" 
-              placeholder="Email Address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full text-base font-sans font-medium text-white border-b-2 border-gray-700 bg-transparent p-4 outline-none focus:border-[#00a85a] text-center transition placeholder-gray-500"
-              required
-            />
-            <input 
-              type="password" 
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full text-base font-sans font-medium text-white border-b-2 border-gray-700 bg-transparent p-4 outline-none focus:border-[#00a85a] text-center transition placeholder-gray-500"
-              required
-            />
-            <button type="submit" className="bg-[#00a85a] text-white py-4 font-black uppercase tracking-widest text-xs hover:bg-white hover:text-[#111111] transition w-full shadow-lg">Sign In</button>
+            <button type="submit" className="bg-[#00a85a] text-white py-4 font-black uppercase tracking-widest text-xs hover:bg-white hover:text-[#111111] transition w-full shadow-lg">Sign In With Google</button>
           </form>
         </div>
       </div>
@@ -136,7 +139,7 @@ export default function Editor() {
                <h1 className="text-xl font-sans font-black uppercase tracking-widest text-[#111111]">
                  {editingId ? "Editing Article" : "Write a New Article"}
                </h1>
-               <p className="text-gray-400 font-sans text-xs uppercase tracking-widest mt-1">Admin Portal / GistWire CMS</p>
+               <p className="text-gray-400 font-sans text-xs uppercase tracking-widest mt-1">Admin Portal / {userEmail} <button onClick={handleLogout} className="underline text-blue-500 ml-2 cursor-pointer">Logout</button></p>
              </div>
              {editingId && (
                 <button type="button" onClick={() => { setEditingId(null); setFormData({ title: "", category: "News", format: "Standard Article", excerpt: "", author: "Staff Reporter", coverImage: "", contentHtml: "<p>Start writing the next report...</p>" }); }} className="text-xs font-black uppercase tracking-widest text-gray-500 hover:text-[#111111] transition bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full">
