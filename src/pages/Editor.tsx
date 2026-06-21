@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Article } from "../types";
 import { saveArticles, getArticles, deleteArticle } from "../lib/db";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import WysiwygEditor from "react-simple-wysiwyg";
 
 export default function Editor() {
   const [isAuth, setIsAuth] = useState(true);
@@ -180,21 +179,11 @@ export default function Editor() {
             {/* WYSIWYG Editor */}
             <div className="mb-8">
               <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Article Body</label>
-              <div className="bg-white border border-gray-300 rounded-lg overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-[#00a85a] transition">
-                <ReactQuill 
-                  theme="snow"
+              <div className="bg-white border border-gray-300 rounded-lg overflow-hidden shadow-sm focus-within:ring-2 focus-within:ring-[#00a85a] transition text-gray-800">
+                <WysiwygEditor 
                   value={formData.contentHtml} 
-                  onChange={(val) => setFormData({...formData, contentHtml: val})}
-                  modules={{
-                    toolbar: [
-                      [{ 'header': [2, 3, false] }],
-                      ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-                      [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
-                      ['link', 'image'],
-                      ['clean']
-                    ],
-                  }}
-                  className="h-[500px] mb-12"
+                  onChange={(e) => setFormData({...formData, contentHtml: e.target.value})}
+                  containerProps={{ style: { minHeight: '400px', resize: 'vertical' } }}
                 />
               </div>
             </div>

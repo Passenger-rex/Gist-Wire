@@ -1,5 +1,5 @@
 import Logo from "../components/Logo";
-import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react";
+import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone } from "lucide-react";
 
 export default function About() {
   return (
@@ -34,29 +34,29 @@ export default function About() {
         <div>
           <h2 className="text-2xl font-black uppercase tracking-widest text-[#111111] mb-8">Connect With Us</h2>
           <div className="flex flex-col gap-4">
-             <a href="/" className="flex items-center gap-4 group">
+             <a href="https://facebook.com/gistwiree" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 group">
                <div className="w-12 h-12 rounded-full bg-[#111111] flex items-center justify-center text-white group-hover:bg-[#1877F2] transition">
                  <Facebook size={20} />
                </div>
                <span className="font-bold text-gray-700 group-hover:text-[#1877F2] transition uppercase tracking-widest text-sm">GistWire News</span>
              </a>
-             <a href="/" className="flex items-center gap-4 group">
+             <a href="https://x.com/gist_wire" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 group">
                <div className="w-12 h-12 rounded-full bg-[#111111] flex items-center justify-center text-white group-hover:bg-[#1DA1F2] transition">
                  <Twitter size={20} />
                </div>
-               <span className="font-bold text-gray-700 group-hover:text-[#1DA1F2] transition uppercase tracking-widest text-sm">@GistWireMedia</span>
+               <span className="font-bold text-gray-700 group-hover:text-[#1DA1F2] transition uppercase tracking-widest text-sm">@gist_wire</span>
              </a>
-             <a href="/" className="flex items-center gap-4 group">
+             <a href="https://instagram.com/gistwireng" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 group">
                <div className="w-12 h-12 rounded-full bg-[#111111] flex items-center justify-center text-white group-hover:bg-[#E1306C] transition">
                  <Instagram size={20} />
                </div>
-               <span className="font-bold text-gray-700 group-hover:text-[#E1306C] transition uppercase tracking-widest text-sm">@gistwire.official</span>
+               <span className="font-bold text-gray-700 group-hover:text-[#E1306C] transition uppercase tracking-widest text-sm">@gistwireng</span>
              </a>
-             <a href="/" className="flex items-center gap-4 group">
+             <a href="https://linkedin.com/company/gistwire" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 group">
                <div className="w-12 h-12 rounded-full bg-[#111111] flex items-center justify-center text-white group-hover:bg-[#0077b5] transition">
                  <Linkedin size={20} />
                </div>
-               <span className="font-bold text-gray-700 group-hover:text-[#0077b5] transition uppercase tracking-widest text-sm">GistWire Publishing</span>
+               <span className="font-bold text-gray-700 group-hover:text-[#0077b5] transition uppercase tracking-widest text-sm">GistWire</span>
              </a>
           </div>
         </div>
@@ -69,9 +69,8 @@ export default function About() {
                 <Mail size={24} />
               </div>
               <div>
-                <h3 className="font-bold uppercase tracking-widest text-sm text-[#111111]">Email Addresses</h3>
-                <p className="text-gray-500 font-medium text-sm mt-1">news@gistwire.com (Editorial)</p>
-                <p className="text-gray-500 font-medium text-sm">tips@gistwire.com (Tips)</p>
+                <h3 className="font-bold uppercase tracking-widest text-sm text-[#111111]">Email Address</h3>
+                <a href="mailto:gistwire5@gmail.com" className="text-gray-500 font-medium text-sm mt-1 block hover:text-[#00a85a] transition">gistwire5@gmail.com</a>
               </div>
             </div>
             
@@ -81,23 +80,11 @@ export default function About() {
               </div>
               <div>
                 <h3 className="font-bold uppercase tracking-widest text-sm text-[#111111]">Phone Line</h3>
-                <p className="text-gray-500 font-medium text-sm mt-1">+234 (0) 800 GIST WIRE</p>
+                <a href="tel:+2349046676138" className="text-gray-500 font-medium text-sm mt-1 block hover:text-[#00a85a] transition">+234 (0) 9046676138</a>
               </div>
             </div>
 
-            <div className="flex items-start gap-4">
-              <div className="text-[#00a85a] mt-1">
-                <MapPin size={24} />
-              </div>
-              <div>
-                <h3 className="font-bold uppercase tracking-widest text-sm text-[#111111]">Headquarters</h3>
-                <p className="text-gray-500 font-medium text-sm mt-1 leading-relaxed">
-                  GistWire Media Building,<br />
-                  Victoria Island,<br />
-                  Lagos, Nigeria.
-                </p>
-              </div>
-            </div>
+
           </div>
         </div>
       </div>
