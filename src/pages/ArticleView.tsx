@@ -289,9 +289,6 @@ export default function ArticleView({ slug }: { slug: string }) {
 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 border-t border-gray-200">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-[#111111] flex items-center justify-center font-black text-white text-xl font-sans">
-                    {article.author.charAt(0)}
-                  </div>
                   <div>
                     <div className="font-bold text-[#111111] text-sm uppercase tracking-wider mb-1">By {article.author}</div>
                     <div className="text-[11px] font-bold text-gray-500 flex items-center gap-2 uppercase tracking-widest">
