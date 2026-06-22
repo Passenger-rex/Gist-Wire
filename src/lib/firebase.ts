@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore } from "firebase/firestore";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import firebaseConfig from "../../firebase-applet-config.json";
 
@@ -20,6 +20,8 @@ const getFirebaseConfig = () => {
 
 const config = getFirebaseConfig();
 const app = initializeApp(config);
-export const db = getFirestore(app, config.firestoreDatabaseId || "(default)");
+export const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+}, config.firestoreDatabaseId || "(default)");
 export const auth = getAuth(app);
 export const provider = new GoogleAuthProvider();
